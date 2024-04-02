@@ -1,0 +1,433 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>C/C&#43;&#43;程序的执行 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="C/C&#43;&#43;程序的执行" />
+<meta property="og:description" content="shell 的重要性用户输入命令名并按回车，shell 会将输入的命令名与自身内置的命令进行对比。如果程序名不是 shell 支持的命令，那么 shell 就会尝试定位文件名与" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/c-c-plus-plus-%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%89%A7%E8%A1%8C/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-01-19T00:00:00+08:00" />
+<meta property="article:modified_time" content="2024-01-19T19:03:49+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="C/C&#43;&#43;程序的执行"/>
+<meta name="twitter:description" content="shell 的重要性用户输入命令名并按回车，shell 会将输入的命令名与自身内置的命令进行对比。如果程序名不是 shell 支持的命令，那么 shell 就会尝试定位文件名与"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/c-c-plus-plus-%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%89%A7%E8%A1%8C/" /><link rel="prev" href="http://localhost:1313/posts/linux-kernel-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/" /><link rel="next" href="http://localhost:1313/posts/linux-kernel-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "C/C++程序的执行",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/c-c-plus-plus-%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%89%A7%E8%A1%8C\/"
+        },"genre": "posts","wordcount":  2683 ,
+        "url": "http:\/\/localhost:1313\/posts\/c-c-plus-plus-%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%89%A7%E8%A1%8C\/","datePublished": "2024-01-19T00:00:00+08:00","dateModified": "2024-01-19T19:03:49+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#shell-的重要性">shell 的重要性</a></li>
+        <li><a href="#内核的作用">内核的作用</a></li>
+        <li><a href="#装载器的作用">装载器的作用</a>
+          <ul>
+            <li><a href="#装载器视角下的二进制文件">装载器视角下的二进制文件</a></li>
+            <li><a href="#程序加载阶段">程序加载阶段</a></li>
+          </ul>
+        </li>
+        <li><a href="#程序执行入口点">程序执行入口点</a>
+          <ul>
+            <li><a href="#装载器查找入口点">装载器查找入口点</a></li>
+            <li><a href="#start-函数的作用">_start() 函数的作用</a></li>
+            <li><a href="#libc-start-main-函数的作用">__libc_start_main() 函数的作用</a></li>
+            <li><a href="#栈和调用惯例">栈和调用惯例</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">C/C&#43;&#43;程序的执行</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-01-19">2024-01-19</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-19">2024-01-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2683 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 6 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#shell-的重要性">shell 的重要性</a></li>
+        <li><a href="#内核的作用">内核的作用</a></li>
+        <li><a href="#装载器的作用">装载器的作用</a>
+          <ul>
+            <li><a href="#装载器视角下的二进制文件">装载器视角下的二进制文件</a></li>
+            <li><a href="#程序加载阶段">程序加载阶段</a></li>
+          </ul>
+        </li>
+        <li><a href="#程序执行入口点">程序执行入口点</a>
+          <ul>
+            <li><a href="#装载器查找入口点">装载器查找入口点</a></li>
+            <li><a href="#start-函数的作用">_start() 函数的作用</a></li>
+            <li><a href="#libc-start-main-函数的作用">__libc_start_main() 函数的作用</a></li>
+            <li><a href="#栈和调用惯例">栈和调用惯例</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="shell-的重要性" class="headerLink">
+    <a href="#shell-%e7%9a%84%e9%87%8d%e8%a6%81%e6%80%a7" class="header-mark"></a>shell 的重要性</h2><p>用户输入命令名并按回车，shell 会将输入的命令名与自身内置的命令进行对比。如果程序名不是 shell 支持的命令，那么 shell 就会尝试定位文件名与命令字符串完全匹配的二进制文件。如果用户输出的命令名不包括二进制文件的完整路径，那么 shell 会尝试定位由 PATH 环境变量指定的目录中的可执行文件。得到可执行二进制文件的路径后，shell 就会启动加载和执行二进制文件的过程。</p>
+<p>shell 先会通过派生与自身相同的子进程来创建自己的副本。这种方法可以有效的将所有 shell 的环境变量传递给新进程。在新进程的内存映射创建好后，绝大多数内存区域的原始数据都会被抹掉或填零（除了包含继承环境变量的那部分区域），同时被新进程的内存映射所覆盖，为执行阶段做准备。</p>
+<p>接下来，shell 的执行可能分为两种情况。默认情况下，shell 会等待它派生的克隆进程执行玩命令。在另一种情况下，如果用户在程序名后输入了一个 &lsquo;&amp;&rsquo; 符号，那么子进程将会在后台执行，与此同时 shell 会继续监视用户接下来输入的命令。如果用户不再可执行文件名后输入 &lsquo;&amp;&rsquo; 符号，同样可以实现后台运行。可以在程序启动后按下 &lsquo;ctrl+z&rsquo;（向子进程发出 SIGSTOP 信号）并立即在 shell 窗口中输入 &ldquo;bg&rdquo;(向子进程发出 SIGCONT 信号)。</p>
+<p>用户在应用程序图标常点击鼠标时，会出发类似的启动程序的过程。带有图标的程序会将鼠标点击的动作转换成 system()调用，该调用会出发类似于通过 shell 窗口启动应用程序的一系列时间。</p>
+<h2 id="内核的作用" class="headerLink">
+    <a href="#%e5%86%85%e6%a0%b8%e7%9a%84%e4%bd%9c%e7%94%a8" class="header-mark"></a>内核的作用</h2><p>shell 一旦委托了运行程序的任务，内核将通过调用 exec 函数族中的函数来做出响应。无论调用那种类型的 exec 函数，它们最终都会调用真正执行程序的 sys_execve 函数。</p>
+<p>下一步操作（在 search_binary_handler(位于文件 fs/exec.c 中)函数中执行）是识别可执行格式。Linux 除了支持最新的 ELF 二进制格式外，还提供了向后兼容性，能够支持许多其他二进制格式。如果识别出了 ELF 格式，则会调用 load_elf_binary 函数（位于文件 fs/binfmt_elf.c 中）。</p>
+<p>当识别出可执行格式是系统所支持的格式后，则会为程序启动准备进程内存映射。特别是由 shell 创建的子进程会通过以下过程从 shell 传递给内核。</p>
+<ul>
+<li>内核首先要做的是彻底抹掉内存映射。紧接着委托装载器从新程序的二进制可执行文件中读取数据，并将数据填充到被抹去的内存映射中。</li>
+<li>通过克隆 shell 进程（调用 fork()），在 shell 中定义的环境变量被传递给子进程，确保环境变量的继承链不被破坏。</li>
+</ul>
+<h2 id="装载器的作用" class="headerLink">
+    <a href="#%e8%a3%85%e8%bd%bd%e5%99%a8%e7%9a%84%e4%bd%9c%e7%94%a8" class="header-mark"></a>装载器的作用</h2><h3 id="装载器视角下的二进制文件" class="headerLink">
+    <a href="#%e8%a3%85%e8%bd%bd%e5%99%a8%e8%a7%86%e8%a7%92%e4%b8%8b%e7%9a%84%e4%ba%8c%e8%bf%9b%e5%88%b6%e6%96%87%e4%bb%b6" class="header-mark"></a>装载器视角下的二进制文件</h3><p>装载器最重要的功能就是将链接器创建的节（section）复制到进程内存映射中。装载器不需要了解各个节的内部结构，它只需要关心节是否是只读或可读写属性，以及在可执行文件启动前是否续存打补丁。</p>
+<p>装载器还会根据节的相同装载需求将链接器创建的节组合成段（segment）。装载器的段一般会携带多个拥有相同访问属性（只读或可读写，以及有没有被打过补丁）的节。</p>
+<h3 id="程序加载阶段" class="headerLink">
+    <a href="#%e7%a8%8b%e5%ba%8f%e5%8a%a0%e8%bd%bd%e9%98%b6%e6%ae%b5" class="header-mark"></a>程序加载阶段</h3><p>识别出二进制格式后，内核装载器模块就会派上用场。首先装载器会定位可执行二进制文件中的 PT_INTERP 段，用于动态加载阶段。</p>
+<p>接着装载器会读取程序的二进制文件段的头，确定每个段的地址和字节长度。在这个阶段装载器仍然不会向程序的内存映射写入任何数据。装载器在此阶段只会建立并维护一组包含可执行文件段（实际上就是每个段的页宽）和程序内存映射关联的结构（比如 vm_are_struct）。</p>
+<p>真正从可执行文件复制段的操作是在程序启动之后才执行的。在执行复制的时候，分配各进程的物理内存页和程序内存映射表之间的虚拟内存映射关系已经建立好了。只有当内核在运行时需要某一个程序段时才会开始加载其对应的页。</p>
+<h2 id="程序执行入口点" class="headerLink">
+    <a href="#%e7%a8%8b%e5%ba%8f%e6%89%a7%e8%a1%8c%e5%85%a5%e5%8f%a3%e7%82%b9" class="header-mark"></a>程序执行入口点</h2><p>从通常的编程视角来看，程序的入口点是 main() 函数。对于程序执行本身而言，并非如此。在执行过程到达 main() 函数之前，还会先执行一些函数，这些函数为程序的运行做准备。</p>
+<p>从程序装载到执行 main() 函数，Linux 通常会执行哪些操作？</p>
+<h3 id="装载器查找入口点" class="headerLink">
+    <a href="#%e8%a3%85%e8%bd%bd%e5%99%a8%e6%9f%a5%e6%89%be%e5%85%a5%e5%8f%a3%e7%82%b9" class="header-mark"></a>装载器查找入口点</h3><p>在程序装载完成后（即准备程序基本数据和复制执行程序必要的节到内存中），装载器会查询 ELF 头的 e_entry 字段的值。这个值包含的程序内存地址指定了程序该从何处开始运行。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Hello</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">SOURCE</span><span class="o">=</span>/tmp/org/loader_t.c
+</span></span><span class="line"><span class="cl"><span class="nv">CC</span><span class="o">=</span>gcc
+</span></span><span class="line"><span class="cl"><span class="nv">OUTPUT_FILE</span><span class="o">=</span>/tmp/org/loader_t
+</span></span><span class="line"><span class="cl"><span class="nv">$CC</span> <span class="nv">$SOURCE</span> -o <span class="nv">$OUTPUT_FILE</span>
+</span></span><span class="line"><span class="cl">readelf -h <span class="nv">$OUTPUT_FILE</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ELF Header:
+</span></span><span class="line"><span class="cl">  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+</span></span><span class="line"><span class="cl">  Class:                             ELF64
+</span></span><span class="line"><span class="cl">  Data:                              2&#39;s complement, little endian
+</span></span><span class="line"><span class="cl">  Version:                           1 (current)
+</span></span><span class="line"><span class="cl">  OS/ABI:                            UNIX - System V
+</span></span><span class="line"><span class="cl">  ABI Version:                       0
+</span></span><span class="line"><span class="cl">  Type:                              DYN (Position-Independent Executable file)
+</span></span><span class="line"><span class="cl">  Machine:                           Advanced Micro Devices X86-64
+</span></span><span class="line"><span class="cl">  Version:                           0x1
+</span></span><span class="line"><span class="cl">  Entry point address:               0x1050
+</span></span><span class="line"><span class="cl">  Start of program headers:          64 (bytes into file)
+</span></span><span class="line"><span class="cl">  Start of section headers:          13968 (bytes into file)
+</span></span><span class="line"><span class="cl">  Flags:                             0x0
+</span></span><span class="line"><span class="cl">  Size of this header:               64 (bytes)
+</span></span><span class="line"><span class="cl">  Size of program headers:           56 (bytes)
+</span></span><span class="line"><span class="cl">  Number of program headers:         13
+</span></span><span class="line"><span class="cl">  Size of section headers:           64 (bytes)
+</span></span><span class="line"><span class="cl">  Number of section headers:         31
+</span></span><span class="line"><span class="cl">  Section header string table index: 30
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">OUTPUT_FILE</span><span class="o">=</span>/tmp/org/loader_t
+</span></span><span class="line"><span class="cl">readelf -a <span class="nv">$OUTPUT_FILE</span> <span class="p">|</span> grep <span class="m">1050</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Entry point address:               0x1050
+</span></span><span class="line"><span class="cl">[15] .text             PROGBITS         0000000000001050  00001050
+</span></span><span class="line"><span class="cl">  29: 0000000000001050    34 FUNC    GLOBAL DEFAULT   15 _start
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看出，entry point 就是 _start 函数的首地址。</p>
+<p>反汇编可执行二进制文件。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">OUTPUT_FILE</span><span class="o">=</span>/tmp/org/loader_t
+</span></span><span class="line"><span class="cl">objdump -d -j .text <span class="nv">$OUTPUT_FILE</span> <span class="p">|</span> head -n <span class="m">25</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">/tmp/org/loader_t:     file format elf64-x86-64
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disassembly of section .text:
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">0000000000001050 &lt;_start&gt;:
+</span></span><span class="line"><span class="cl">    1050:	31 ed                	xor    %ebp,%ebp
+</span></span><span class="line"><span class="cl">    1052:	49 89 d1             	mov    %rdx,%r9
+</span></span><span class="line"><span class="cl">    1055:	5e                   	pop    %rsi
+</span></span><span class="line"><span class="cl">    1056:	48 89 e2             	mov    %rsp,%rdx
+</span></span><span class="line"><span class="cl">    1059:	48 83 e4 f0          	and    $0xfffffffffffffff0,%rsp
+</span></span><span class="line"><span class="cl">    105d:	50                   	push   %rax
+</span></span><span class="line"><span class="cl">    105e:	54                   	push   %rsp
+</span></span><span class="line"><span class="cl">    105f:	45 31 c0             	xor    %r8d,%r8d
+</span></span><span class="line"><span class="cl">    1062:	31 c9                	xor    %ecx,%ecx
+</span></span><span class="line"><span class="cl">    1064:	48 8d 3d ce 00 00 00 	lea    0xce(%rip),%rdi        # 1139 &lt;main&gt;
+</span></span><span class="line"><span class="cl">    106b:	ff 15 4f 2f 00 00    	call   *0x2f4f(%rip)        # 3fc0 &lt;__libc_start_main@GLIBC_2.34&gt;
+</span></span><span class="line"><span class="cl">    1071:	f4                   	hlt
+</span></span><span class="line"><span class="cl">    1072:	66 2e 0f 1f 84 00 00 	cs nopw 0x0(%rax,%rax,1)
+</span></span><span class="line"><span class="cl">    1079:	00 00 00
+</span></span><span class="line"><span class="cl">    107c:	0f 1f 40 00          	nopl   0x0(%rax)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">0000000000001080 &lt;deregister_tm_clones&gt;:
+</span></span><span class="line"><span class="cl">    1080:	48 8d 3d 91 2f 00 00 	lea    0x2f91(%rip),%rdi        # 4018 &lt;__TMC_END__&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="start-函数的作用" class="headerLink">
+    <a href="#start-%e5%87%bd%e6%95%b0%e7%9a%84%e4%bd%9c%e7%94%a8" class="header-mark"></a>_start() 函数的作用</h3><p>_start 函数的作用是为接下来需要调用的 __libc_start_main 函数准备入参，该函数的定义如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">int __libc_start_main(int (*main) (int, char **, char **), /* address of main function */
+</span></span><span class="line"><span class="cl">    int argc,                               /* number of command line args             */
+</span></span><span class="line"><span class="cl">    char ** ubp_av,                         /* command line arg array                  */
+</span></span><span class="line"><span class="cl">    void (*init) (void),                    /* address of init function                */
+</span></span><span class="line"><span class="cl">    void (*fini) (void),                    /* address of fini function                */
+</span></span><span class="line"><span class="cl">    void (*rtld_fini) (void),               /* address of dynamic linker fini function */
+</span></span><span class="line"><span class="cl">    void (* stack_end)                      /* enf of the stack address                */
+</span></span><span class="line"><span class="cl">);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>事实上，call 指令之前的所有指令都是在将调用所需的参数按照调用期望的顺序放入栈中。</p>
+<h3 id="libc-start-main-函数的作用" class="headerLink">
+    <a href="#libc-start-main-%e5%87%bd%e6%95%b0%e7%9a%84%e4%bd%9c%e7%94%a8" class="header-mark"></a>__libc_start_main() 函数的作用</h3><p>该函数在为程序启动准备环境的过程中扮演了重要的角色。在程序启动阶段，它不仅会为程序设置好运行环境，还会执行一下操作。</p>
+<ul>
+<li>启动程序的线程。</li>
+<li>调用 <code>_init()</code> 函数，该函数会在调用 <code>main()</code> 函数前完成必要的初始化操作。（gcc 编译器利用 <code>__attribute__((constructor))</code> 关键字对程序启动前的自定义操作提供支持）。</li>
+<li>注册 <code>_fini()</code> 和 <code>rtld_fini()</code> 函数，这些函数会在程序终止时调用。通常来说， <code>_fini()</code> 和 <code>_init()</code> 函数操作的顺序相反。 gcc 编译器利用 <code>__attribute__(destructor))</code> 关键字对程序结束时的自定义操作提供支持。</li>
+</ul>
+<p>最后，当所有准备操作都完成时， <code>__libc_start_main()</code> 调用 <code>main()</code> 函数，启动程序。</p>
+<h3 id="栈和调用惯例" class="headerLink">
+    <a href="#%e6%a0%88%e5%92%8c%e8%b0%83%e7%94%a8%e6%83%af%e4%be%8b" class="header-mark"></a>栈和调用惯例</h3><p>栈和函数相关的几个重要的点</p>
+<ul>
+<li>进程内存会为栈保留一定的内存区域</li>
+<li>实际运行时，栈内存的使用量是会变化的，函数的调用序列越长，栈内存就会用的越多。</li>
+<li>栈内存不是无限的。可用栈内存的数量必然与可用于动态分配的内存（即堆内存）数量相关。</li>
+</ul>
+<p><strong>函数调用惯例</strong></p>
+<p>一个函数如何将参数传递给被调用的函数是一个有趣的话题。人们已经设计了种种复杂精巧的函数变量传递机制，因此形成了一些特殊的 <strong>汇编语言惯例</strong> 。这些基于栈的实现机制我们通常成为调用惯例。</p>
+<p>已经为 x86 架构设计了很多不同的调用惯例，如： cdecl, stdcall, fastcall, thiscall 等。每种调用惯例都是为不同设计视角的特定情况专门设计的。</p>
+</div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-19</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/linux-kernel-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/" class="prev" rel="prev" title="Linux Kernel 进程管理"><i class="fas fa-angle-left fa-fw"></i>Linux Kernel 进程管理</a>
+            <a href="/posts/linux-kernel-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" class="next" rel="next" title="Linux Kernel 内存管理">Linux Kernel 内存管理<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>

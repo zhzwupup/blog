@@ -1,0 +1,1544 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>Linux Kernel 进程地址空间 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="Linux Kernel 进程地址空间" />
+<meta property="og:description" content="内核需要管理用户空间中进程的内存。Linux 采用虚拟内存技术，系统中的所有进程之间以虚拟方式共享内存。 对一个进程而言，它好像可以访问整个系统" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/linux-kernel-%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-01-22T00:00:00+08:00" />
+<meta property="article:modified_time" content="2024-01-22T01:03:09+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Linux Kernel 进程地址空间"/>
+<meta name="twitter:description" content="内核需要管理用户空间中进程的内存。Linux 采用虚拟内存技术，系统中的所有进程之间以虚拟方式共享内存。 对一个进程而言，它好像可以访问整个系统"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/linux-kernel-%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/" /><link rel="prev" href="http://localhost:1313/posts/linux-kernel-%E5%9D%97-i-o-%E5%B1%82/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Linux Kernel 进程地址空间",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/linux-kernel-%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4\/"
+        },"genre": "posts","wordcount":  8853 ,
+        "url": "http:\/\/localhost:1313\/posts\/linux-kernel-%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4\/","datePublished": "2024-01-22T00:00:00+08:00","dateModified": "2024-01-22T01:03:09+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#地址空间">地址空间</a></li>
+        <li><a href="#内存描述符">内存描述符</a>
+          <ul>
+            <li><a href="#分配内存描述符">分配内存描述符</a></li>
+            <li><a href="#撤销内存描述符">撤销内存描述符</a></li>
+            <li><a href="#mm-struct-与内核线程">mm_struct 与内核线程</a></li>
+          </ul>
+        </li>
+        <li><a href="#虚拟内存区域">虚拟内存区域</a>
+          <ul>
+            <li><a href="#虚拟内存区域定义">虚拟内存区域定义</a></li>
+            <li><a href="#vma-标志">VMA 标志</a></li>
+            <li><a href="#vma-操作">VMA 操作</a></li>
+            <li><a href="#实际使用中的内存区域">实际使用中的内存区域</a></li>
+          </ul>
+        </li>
+        <li><a href="#操作内存区域">操作内存区域</a>
+          <ul>
+            <li><a href="#find-vma">find_vma()</a></li>
+            <li><a href="#find-vma-prev">find_vma_prev()</a></li>
+            <li><a href="#find-vma-insersection">find_vma_insersection()</a></li>
+          </ul>
+        </li>
+        <li><a href="#mmap-和-do-mmap-创建地址区间">mmap() 和 do_mmap(): 创建地址区间</a></li>
+        <li><a href="#munmap-和-do-munmap-删除地址区间">munmap() 和 do_munmap()：删除地址区间</a></li>
+        <li><a href="#页表">页表</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Linux Kernel 进程地址空间</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-01-22">2024-01-22</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-22">2024-01-22</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 8853 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 18 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#地址空间">地址空间</a></li>
+        <li><a href="#内存描述符">内存描述符</a>
+          <ul>
+            <li><a href="#分配内存描述符">分配内存描述符</a></li>
+            <li><a href="#撤销内存描述符">撤销内存描述符</a></li>
+            <li><a href="#mm-struct-与内核线程">mm_struct 与内核线程</a></li>
+          </ul>
+        </li>
+        <li><a href="#虚拟内存区域">虚拟内存区域</a>
+          <ul>
+            <li><a href="#虚拟内存区域定义">虚拟内存区域定义</a></li>
+            <li><a href="#vma-标志">VMA 标志</a></li>
+            <li><a href="#vma-操作">VMA 操作</a></li>
+            <li><a href="#实际使用中的内存区域">实际使用中的内存区域</a></li>
+          </ul>
+        </li>
+        <li><a href="#操作内存区域">操作内存区域</a>
+          <ul>
+            <li><a href="#find-vma">find_vma()</a></li>
+            <li><a href="#find-vma-prev">find_vma_prev()</a></li>
+            <li><a href="#find-vma-insersection">find_vma_insersection()</a></li>
+          </ul>
+        </li>
+        <li><a href="#mmap-和-do-mmap-创建地址区间">mmap() 和 do_mmap(): 创建地址区间</a></li>
+        <li><a href="#munmap-和-do-munmap-删除地址区间">munmap() 和 do_munmap()：删除地址区间</a></li>
+        <li><a href="#页表">页表</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>内核需要管理用户空间中进程的内存。Linux 采用虚拟内存技术，系统中的所有进程之间以虚拟方式共享内存。</p>
+<p>对一个进程而言，它好像可以访问整个系统的所有物理内存。它所拥有的地址空间也可以远远大于系统物理内存。</p>
+<h2 id="地址空间" class="headerLink">
+    <a href="#%e5%9c%b0%e5%9d%80%e7%a9%ba%e9%97%b4" class="header-mark"></a>地址空间</h2><p>进程地址空间又进程可寻址的虚拟内存组成，内核允许进程使用这种虚拟内存中的地址。每个进程都有一个 32 或 64 位的平坦（flat）地址空间，空间的具体大小取决于体系结构。“平坦”指的是地址空间范围是一个独立的连续空间（比如，地址从 0 扩展到 4294967295 的 32 位地址空间）。现代采用虚拟内存的操作系统通常都使用平坦地址空间而不是分段式的内存模式。</p>
+<p>内存地址是一个给定的值，它要在地址空间范围之内。尽管一个进程可以寻址 4GB 的虚拟内存（在 32 位的地址空间中），但这不代表它有权访问所有的虚拟地址。可以被进程访问的合法地址空间称为内存区域（memory areas）。通过内核，进程可以给自己的地址空间动态地添加或减少内存区域。</p>
+<p>进程只能访问有效内存区域内的内存地址。每个内存区域也具有相关权限如对相关进程有可读、可写、可执行属性。如果一个进程访问了不在有效范围中的内存区域，或以不正确的方式访问了有效地址，那么内核就会种植该进程，并返回“段错误”信息。</p>
+<p>内存区域可以包含各种内存对象：</p>
+<ul>
+<li>可执行文件代码的内存映射，称为代码段 (text section)。</li>
+<li>可执行文件的已初始化全局变量的内存映射，称为数据段 (data section)。</li>
+<li>包含未初始化全局变量，也就是 bss 段的零页（页面中的信息全部为 0 值，所以可用于映射 bss 段等目的）的内存映射。</li>
+<li>用于进程用户空间栈（区分进程内核栈，进程的内核栈独立存在并由内核维护）的零页的内存映射。</li>
+<li>每一个诸如 C 库或动态链接程序等共享库的代码段、数据段和 bss 也会被载入进程的地址空间。</li>
+<li>任何内存映射文件</li>
+<li>任何共享内存段。</li>
+<li>任何匿名的内存映射，比如由 malloc() 分配的内存。（通过 mmap() 和 brk() 来实现 malloc() 函数）</li>
+</ul>
+<p>进程地址空间中的任何有效地址都只能位于唯一的区域，这些内存区域不能相互覆盖。在执行的进程中，每个不同的内存片段都对应一个独立的内存区域：栈、对象代码、全局变量、被映射的文件等。</p>
+<h2 id="内存描述符" class="headerLink">
+    <a href="#%e5%86%85%e5%ad%98%e6%8f%8f%e8%bf%b0%e7%ac%a6" class="header-mark"></a>内存描述符</h2><p>内核使用内存描述符结构体表示进程的地址空间，该结构包含了和进程地址空间有关全部信息。内存描述符由 mm_struct 结构体表示，定义在 include/linux/mm_types.h 中：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span><span class="lnt">152
+</span><span class="lnt">153
+</span><span class="lnt">154
+</span><span class="lnt">155
+</span><span class="lnt">156
+</span><span class="lnt">157
+</span><span class="lnt">158
+</span><span class="lnt">159
+</span><span class="lnt">160
+</span><span class="lnt">161
+</span><span class="lnt">162
+</span><span class="lnt">163
+</span><span class="lnt">164
+</span><span class="lnt">165
+</span><span class="lnt">166
+</span><span class="lnt">167
+</span><span class="lnt">168
+</span><span class="lnt">169
+</span><span class="lnt">170
+</span><span class="lnt">171
+</span><span class="lnt">172
+</span><span class="lnt">173
+</span><span class="lnt">174
+</span><span class="lnt">175
+</span><span class="lnt">176
+</span><span class="lnt">177
+</span><span class="lnt">178
+</span><span class="lnt">179
+</span><span class="lnt">180
+</span><span class="lnt">181
+</span><span class="lnt">182
+</span><span class="lnt">183
+</span><span class="lnt">184
+</span><span class="lnt">185
+</span><span class="lnt">186
+</span><span class="lnt">187
+</span><span class="lnt">188
+</span><span class="lnt">189
+</span><span class="lnt">190
+</span><span class="lnt">191
+</span><span class="lnt">192
+</span><span class="lnt">193
+</span><span class="lnt">194
+</span><span class="lnt">195
+</span><span class="lnt">196
+</span><span class="lnt">197
+</span><span class="lnt">198
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">struct mm_struct {
+</span></span><span class="line"><span class="cl">	struct {
+</span></span><span class="line"><span class="cl">		struct vm_area_struct *mmap;		/* 内存区域链表 */
+</span></span><span class="line"><span class="cl">		struct rb_root mm_rb;               /* VMA 形成的红黑树 */
+</span></span><span class="line"><span class="cl">		u64 vmacache_seqnum;                   /* per-thread vmacache */
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_MMU
+</span></span><span class="line"><span class="cl">		unsigned long (*get_unmapped_area) (struct file *filp,
+</span></span><span class="line"><span class="cl">				unsigned long addr, unsigned long len,
+</span></span><span class="line"><span class="cl">				unsigned long pgoff, unsigned long flags);
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">		unsigned long mmap_base;	/* base of mmap area */
+</span></span><span class="line"><span class="cl">		unsigned long mmap_legacy_base;	/* base of mmap area in bottom-up allocations */
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_HAVE_ARCH_COMPAT_MMAP_BASES
+</span></span><span class="line"><span class="cl">		/* Base adresses for compatible mmap() */
+</span></span><span class="line"><span class="cl">		unsigned long mmap_compat_base;
+</span></span><span class="line"><span class="cl">		unsigned long mmap_compat_legacy_base;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">		unsigned long task_size;	/* size of task vm space */
+</span></span><span class="line"><span class="cl">		unsigned long highest_vm_end;	/* highest vma end address */
+</span></span><span class="line"><span class="cl">		pgd_t * pgd;                         /* 页全局目录 */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_MEMBARRIER
+</span></span><span class="line"><span class="cl">		/**
+</span></span><span class="line"><span class="cl">		 * @membarrier_state: Flags controlling membarrier behavior.
+</span></span><span class="line"><span class="cl">		 *
+</span></span><span class="line"><span class="cl">		 * This field is close to @pgd to hopefully fit in the same
+</span></span><span class="line"><span class="cl">		 * cache-line, which needs to be touched by switch_mm().
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		atomic_t membarrier_state;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		/**
+</span></span><span class="line"><span class="cl">		 * @mm_users: The number of users including userspace.
+</span></span><span class="line"><span class="cl">		 *
+</span></span><span class="line"><span class="cl">		 * Use mmget()/mmget_not_zero()/mmput() to modify. When this
+</span></span><span class="line"><span class="cl">		 * drops to 0 (i.e. when the task exits and there are no other
+</span></span><span class="line"><span class="cl">		 * temporary reference holders), we also release a reference on
+</span></span><span class="line"><span class="cl">		 * @mm_count (which may then free the &amp;struct mm_struct if
+</span></span><span class="line"><span class="cl">		 * @mm_count also drops to 0).
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		atomic_t mm_users;                     /* 使用地址空间的用户数 */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		/**
+</span></span><span class="line"><span class="cl">		 * @mm_count: The number of references to &amp;struct mm_struct
+</span></span><span class="line"><span class="cl">		 * (@mm_users count as 1).
+</span></span><span class="line"><span class="cl">		 *
+</span></span><span class="line"><span class="cl">		 * Use mmgrab()/mmdrop() to modify. When this drops to 0, the
+</span></span><span class="line"><span class="cl">		 * &amp;struct mm_struct is freed.
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		atomic_t mm_count;                      /* 主使用计数器 */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		/**
+</span></span><span class="line"><span class="cl">		 * @has_pinned: Whether this mm has pinned any pages.  This can
+</span></span><span class="line"><span class="cl">		 * be either replaced in the future by @pinned_vm when it
+</span></span><span class="line"><span class="cl">		 * becomes stable, or grow into a counter on its own. We&#39;re
+</span></span><span class="line"><span class="cl">		 * aggresive on this bit now - even if the pinned pages were
+</span></span><span class="line"><span class="cl">		 * unpinned later on, we&#39;ll still keep this bit set for the
+</span></span><span class="line"><span class="cl">		 * lifecycle of this mm just for simplicity.
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		atomic_t has_pinned;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_MMU
+</span></span><span class="line"><span class="cl">		atomic_long_t pgtables_bytes;	/* PTE page table pages */
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">		int map_count;			/* 内存区域的个数 */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		spinlock_t page_table_lock; /* 保护页表和一些计数器 */
+</span></span><span class="line"><span class="cl">		/*
+</span></span><span class="line"><span class="cl">		 * With some kernel config, the current mmap_lock&#39;s offset
+</span></span><span class="line"><span class="cl">		 * inside &#39;mm_struct&#39; is at 0x120, which is very optimal, as
+</span></span><span class="line"><span class="cl">		 * its two hot fields &#39;count&#39; and &#39;owner&#39; sit in 2 different
+</span></span><span class="line"><span class="cl">		 * cachelines,  and when mmap_lock is highly contended, both
+</span></span><span class="line"><span class="cl">		 * of the 2 fields will be accessed frequently, current layout
+</span></span><span class="line"><span class="cl">		 * will help to reduce cache bouncing.
+</span></span><span class="line"><span class="cl">		 *
+</span></span><span class="line"><span class="cl">		 * So please be careful with adding new fields before
+</span></span><span class="line"><span class="cl">		 * mmap_lock, which can easily push the 2 fields into one
+</span></span><span class="line"><span class="cl">		 * cacheline.
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		struct rw_semaphore mmap_lock;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		struct list_head mmlist; /* List of maybe swapped mm&#39;s.	These
+</span></span><span class="line"><span class="cl">					  * are globally strung together off
+</span></span><span class="line"><span class="cl">					  * init_mm.mmlist, and are protected
+</span></span><span class="line"><span class="cl">					  * by mmlist_lock
+</span></span><span class="line"><span class="cl">                    * 所有 mm_struct 形成的链表
+</span></span><span class="line"><span class="cl">					  */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		unsigned long hiwater_rss; /* High-watermark of RSS usage */
+</span></span><span class="line"><span class="cl">		unsigned long hiwater_vm;  /* High-water virtual memory usage */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		unsigned long total_vm;	   /* Total pages mapped */
+</span></span><span class="line"><span class="cl">		unsigned long locked_vm;   /* Pages that have PG_mlocked set */
+</span></span><span class="line"><span class="cl">		atomic64_t    pinned_vm;   /* Refcount permanently increased */
+</span></span><span class="line"><span class="cl">		unsigned long data_vm;	   /* VM_WRITE &amp; ~VM_SHARED &amp; ~VM_STACK */
+</span></span><span class="line"><span class="cl">		unsigned long exec_vm;	   /* VM_EXEC &amp; ~VM_WRITE &amp; ~VM_STACK */
+</span></span><span class="line"><span class="cl">		unsigned long stack_vm;	   /* VM_STACK */
+</span></span><span class="line"><span class="cl">		unsigned long def_flags;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		/**
+</span></span><span class="line"><span class="cl">		 * @write_protect_seq: Locked when any thread is write
+</span></span><span class="line"><span class="cl">		 * protecting pages mapped by this mm to enforce a later COW,
+</span></span><span class="line"><span class="cl">		 * for instance during page table copying for fork().
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		seqcount_t write_protect_seq;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		spinlock_t arg_lock; /* protect the below fields */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		unsigned long start_code, end_code, start_data, end_data; /* 代码段、数据段的开始和结束地址 */
+</span></span><span class="line"><span class="cl">		unsigned long start_brk, brk, start_stack;  /* 堆的首地址、尾地址，进程栈的首地址 */
+</span></span><span class="line"><span class="cl">		unsigned long arg_start, arg_end, env_start, env_end;  /* 命令行参数的首地址、尾地址，环境变量的首地址、尾地址 */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		unsigned long saved_auxv[AT_VECTOR_SIZE]; /* for /proc/PID/auxv */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		/*
+</span></span><span class="line"><span class="cl">		 * Special counters, in some configurations protected by the
+</span></span><span class="line"><span class="cl">		 * page_table_lock, in other configurations by being atomic.
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		struct mm_rss_stat rss_stat;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		struct linux_binfmt *binfmt;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		/* Architecture-specific MM context */
+</span></span><span class="line"><span class="cl">		mm_context_t context;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		unsigned long flags; /* Must use atomic bitops to access */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		struct core_state *core_state; /* coredumping support */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_AIO
+</span></span><span class="line"><span class="cl">		spinlock_t			ioctx_lock;
+</span></span><span class="line"><span class="cl">		struct kioctx_table __rcu	*ioctx_table;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_MEMCG
+</span></span><span class="line"><span class="cl">		/*
+</span></span><span class="line"><span class="cl">		 * &#34;owner&#34; points to a task that is regarded as the canonical
+</span></span><span class="line"><span class="cl">		 * user/owner of this mm. All of the following must be true in
+</span></span><span class="line"><span class="cl">		 * order for it to be changed:
+</span></span><span class="line"><span class="cl">		 *
+</span></span><span class="line"><span class="cl">		 * current == mm-&gt;owner
+</span></span><span class="line"><span class="cl">		 * current-&gt;mm != mm
+</span></span><span class="line"><span class="cl">		 * new_owner-&gt;mm == mm
+</span></span><span class="line"><span class="cl">		 * new_owner-&gt;alloc_lock is held
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		struct task_struct __rcu *owner;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">		struct user_namespace *user_ns;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		/* store ref to file /proc/&lt;pid&gt;/exe symlink points to */
+</span></span><span class="line"><span class="cl">		struct file __rcu *exe_file;
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_MMU_NOTIFIER
+</span></span><span class="line"><span class="cl">		struct mmu_notifier_subscriptions *notifier_subscriptions;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">#if defined(CONFIG_TRANSPARENT_HUGEPAGE) &amp;&amp; !USE_SPLIT_PMD_PTLOCKS
+</span></span><span class="line"><span class="cl">		pgtable_t pmd_huge_pte; /* protected by page_table_lock */
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_NUMA_BALANCING
+</span></span><span class="line"><span class="cl">		/*
+</span></span><span class="line"><span class="cl">		 * numa_next_scan is the next time that the PTEs will be marked
+</span></span><span class="line"><span class="cl">		 * pte_numa. NUMA hinting faults will gather statistics and
+</span></span><span class="line"><span class="cl">		 * migrate pages to new nodes if necessary.
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		unsigned long numa_next_scan;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		/* Restart point for scanning and setting pte_numa */
+</span></span><span class="line"><span class="cl">		unsigned long numa_scan_offset;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		/* numa_scan_seq prevents two threads setting pte_numa */
+</span></span><span class="line"><span class="cl">		int numa_scan_seq;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">		/*
+</span></span><span class="line"><span class="cl">		 * An operation with batched TLB flushing is going on. Anything
+</span></span><span class="line"><span class="cl">		 * that can move process memory needs to flush the TLB when
+</span></span><span class="line"><span class="cl">		 * moving a PROT_NONE or PROT_NUMA mapped page.
+</span></span><span class="line"><span class="cl">		 */
+</span></span><span class="line"><span class="cl">		atomic_t tlb_flush_pending;
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_ARCH_WANT_BATCHED_UNMAP_TLB_FLUSH
+</span></span><span class="line"><span class="cl">		/* See flush_tlb_batched_pending() */
+</span></span><span class="line"><span class="cl">		bool tlb_flush_batched;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">		struct uprobes_state uprobes_state;
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_HUGETLB_PAGE
+</span></span><span class="line"><span class="cl">		atomic_long_t hugetlb_usage;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">		struct work_struct async_put_work;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_IOMMU_SUPPORT
+</span></span><span class="line"><span class="cl">		u32 pasid;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">	} __randomize_layout;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * The mm_cpumask needs to be at the end of mm_struct, because it
+</span></span><span class="line"><span class="cl">	 * is dynamically sized based on nr_cpu_ids.
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	unsigned long cpu_bitmap[];
+</span></span><span class="line"><span class="cl">};
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>mm_users 记录正在使用该地址的进程数目。例如，如果两个线程共享该地址空间，那么 mm_users 的值便为 2； mm_count 是 mm_struct 结构体的主引用计数。如果有 9 个线程共享某个地址空间，那么 mm_users 是 9，而 mm_count 的值为 1。当 mm_users 的值减为 0（即所有正使用该地址空间的线程都退出）时， mm_count 的值才变为 0。当 mm_count 的值等于 0,说明已经没有任何指向该 mm_struct 结构体的引用了，这时，该结构体会被撤销。当内核在一个地址空间上操作，并需要使用与该地址相关联的引用计数时，内核便增加 mm_count。</p>
+<p>mmap 和 mm_rb 这两个不同数据结构体描述的对象是相同的：该地址空间中的全部内存区域。只是前者以链表形式存放而后者红黑树形式存放。</p>
+<p>内核通常会避免使用两种数据结构组织同一种数据，但此处内核这样的冗余确实派得上用场。 mmap 结构体作为链表，利于简单、高效地遍历所有元素；而 mm_rb 更适合搜索指定元素。</p>
+<p>所有的 mm_struct 结构体都通过自身的 mmlist 字段连接在一个双向链表中，该链表的首元素是 init_mm 内存描述符，它代表 init 进程的地址空间。需要注意，操作该链表的时候需要使用 mmlist_lock 锁来防止并发访问。</p>
+<h3 id="分配内存描述符" class="headerLink">
+    <a href="#%e5%88%86%e9%85%8d%e5%86%85%e5%ad%98%e6%8f%8f%e8%bf%b0%e7%ac%a6" class="header-mark"></a>分配内存描述符</h3><p>在 task_struct 结构体中， mm 字段存放着该进程使用的内存描述符，所以 current-&gt;mm 就指向当前进程的内存描述符。fork() 函数利用 copy_mm() 函数复制父进程的内存描述符，也就是 current-&gt;mm 字段给其子进程，而子进程中的 mm_struct 结构体实际是通过文件 kernel/fork.c 中的 allocate_mm() 宏从 mm_cachep slab 缓存中分配得到的。通常，每个进程都有唯一的 mm_struct 结构体，即唯一的地址空间。</p>
+<p>如果父进程希望和子进程共享地址空间，可以在调用 clone() 时设置 CLONE_VM 标志。这样的进程称为线程。 <strong>是否共享地址空间是进程和 Linux 线程本质上的唯一区别。</strong> 除此之外，Linux 内核并不区别对待它们，线程对内核来说仅仅是一个共享特定资源的进程而已。</p>
+<p>当 CLONE_VM 被指定后，内核就不再需要调用 allocate_mm() 函数了，而仅仅需要在调用 copy_mm() 函数中将 mm 字段指向其父进程的内存描述符就可以了：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">signed long clone_flags, struct task_struct *tsk)
+</span></span><span class="line"><span class="cl">{
+</span></span><span class="line"><span class="cl">	struct mm_struct *mm, *oldmm;
+</span></span><span class="line"><span class="cl">	int retval;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	tsk-&gt;min_flt = tsk-&gt;maj_flt = 0;
+</span></span><span class="line"><span class="cl">	tsk-&gt;nvcsw = tsk-&gt;nivcsw = 0;
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_DETECT_HUNG_TASK
+</span></span><span class="line"><span class="cl">	tsk-&gt;last_switch_count = tsk-&gt;nvcsw + tsk-&gt;nivcsw;
+</span></span><span class="line"><span class="cl">	tsk-&gt;last_switch_time = 0;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	tsk-&gt;mm = NULL;
+</span></span><span class="line"><span class="cl">	tsk-&gt;active_mm = NULL;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * Are we cloning a kernel thread?
+</span></span><span class="line"><span class="cl">	 *
+</span></span><span class="line"><span class="cl">	 * We need to steal a active VM for that..
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	oldmm = current-&gt;mm;
+</span></span><span class="line"><span class="cl">	if (!oldmm)
+</span></span><span class="line"><span class="cl">		return 0;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* initialize the new vmacache entries */
+</span></span><span class="line"><span class="cl">	vmacache_flush(tsk);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	if (clone_flags &amp; CLONE_VM) {
+</span></span><span class="line"><span class="cl">		mmget(oldmm);
+</span></span><span class="line"><span class="cl">		mm = oldmm;
+</span></span><span class="line"><span class="cl">		goto good_mm;
+</span></span><span class="line"><span class="cl">	}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	retval = -ENOMEM;
+</span></span><span class="line"><span class="cl">	mm = dup_mm(tsk, current-&gt;mm);
+</span></span><span class="line"><span class="cl">	if (!mm)
+</span></span><span class="line"><span class="cl">		goto fail_nomem;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">good_mm:
+</span></span><span class="line"><span class="cl">	tsk-&gt;mm = mm;
+</span></span><span class="line"><span class="cl">	tsk-&gt;active_mm = mm;
+</span></span><span class="line"><span class="cl">	return 0;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">fail_nomem:
+</span></span><span class="line"><span class="cl">	return retval;
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="撤销内存描述符" class="headerLink">
+    <a href="#%e6%92%a4%e9%94%80%e5%86%85%e5%ad%98%e6%8f%8f%e8%bf%b0%e7%ac%a6" class="header-mark"></a>撤销内存描述符</h3><p>当进程退出时，内核会调用定义在 kernel/exit.c 中的 exit_mm() 函数，该函数执行一些常规的撤销工作，同时更新一些统计量。其中，该函数会调用 mmput() 函数减少内存描述符中的 mm_users 用户计数，如果用户计数降到零，将调用 mmdrop() 函数，减少 mm_count 使用计数。如果使用计数也等于零了，说明该内存描述符不再有任何使用者了，就会调用 free_mm() 宏通过 kmem_cache_free() 函数将 mm_struct 结构体归还到 mm_cachep slab 缓存中。</p>
+<h3 id="mm-struct-与内核线程" class="headerLink">
+    <a href="#mm-struct-%e4%b8%8e%e5%86%85%e6%a0%b8%e7%ba%bf%e7%a8%8b" class="header-mark"></a>mm_struct 与内核线程</h3><p>内核线程没有进程地址空间，也没有相关的内存描述符。所以内核线程对应的进程描述符中 mm 字段为空。事实上，这也是内核线程的真正含义 —— <strong>它们没有用户上下文。</strong></p>
+<p>内核线程并不需要访问任何用户空间的内存，内核线程在用户空间中没有任何页，所以实际上它们 <strong>不需要有自己的内存描述符和页表。</strong></p>
+<p>尽管如此，访问内核内存，内核线程也还是需要使用一些数据的，比如页表。为了避免内核线程为内存描述符和页表浪费内存，也为了当新内核线程运行时，避免浪费处理器周期向新地址空间切换，内核线程将直接使用前一个进程个的内存描述符。</p>
+<p>当一个进程被调度时，该进程的 mm 字段指向的地址空间被装载到内存，进程描述符中的 active_mm 字段会被更新，指向新的地址空间。内核线程没有地址空间，所以 mm 字段为 NULL。于是，当一个内核线程被调度时，内核发现它的 mm 字段为 NULL，就会保留前一个进程的地址空间，随后内核更新内核线程对应的进程描述符中的 active_mm 字段，使其指向前一个进程的内存描述符。所以在需要时，内核线程便可以使用前一个进程的页表。因为内核线程不访问用户空间的内存，所以它们仅仅使用地址空间中和内核内存相关的信息。</p>
+<h2 id="虚拟内存区域" class="headerLink">
+    <a href="#%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98%e5%8c%ba%e5%9f%9f" class="header-mark"></a>虚拟内存区域</h2><h3 id="虚拟内存区域定义" class="headerLink">
+    <a href="#%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98%e5%8c%ba%e5%9f%9f%e5%ae%9a%e4%b9%89" class="header-mark"></a>虚拟内存区域定义</h3><p>内存区域由 vm_area_struct 结构体描述，定义在文件 include/linux/mm_types.h 中。内存区域在 Linux 内核中也经常称作虚拟内存区域（virtual memory areas, VMAs)。</p>
+<p>vm_area_struct 结构体描述了指定地址空间内连续空间上的一个独立内存范围。内核将每个内存区域作为一个单独的内存对象管理，每个内存区域都拥有一致的属性，比如访问权限等，另外，相应的操作也都一致。按照这样的方式，每一个 VMA 就可以代表不同类型的内存区域（比如内存映射文件或进程用户空间栈），这种管理方式类似于使用 VFS 层的面向对象方法。结构体定义如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">/*
+</span></span><span class="line"><span class="cl"> * This struct describes a virtual memory area. There is one of these
+</span></span><span class="line"><span class="cl"> * per VM-area/task. A VM area is any part of the process virtual memory
+</span></span><span class="line"><span class="cl"> * space that has a special rule for the page-fault handlers (ie a shared
+</span></span><span class="line"><span class="cl"> * library, the executable area etc).
+</span></span><span class="line"><span class="cl"> */
+</span></span><span class="line"><span class="cl">struct vm_area_struct {
+</span></span><span class="line"><span class="cl">	/* The first cache line has the info for VMA tree walking. */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	unsigned long vm_start;		/* 区间的首地址 */
+</span></span><span class="line"><span class="cl">	unsigned long vm_end;		/* The first byte after our end address
+</span></span><span class="line"><span class="cl">					   within vm_mm. */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* linked list of VM areas per task, sorted by address */
+</span></span><span class="line"><span class="cl">	struct vm_area_struct *vm_next, *vm_prev;    /* VMA 链表 */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	struct rb_node vm_rb;                     /* 树上该 VMA 的节点 */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * Largest free memory gap in bytes to the left of this VMA.
+</span></span><span class="line"><span class="cl">	 * Either between this VMA and vma-&gt;vm_prev, or between one of the
+</span></span><span class="line"><span class="cl">	 * VMAs below us in the VMA rbtree and its -&gt;vm_prev. This helps
+</span></span><span class="line"><span class="cl">	 * get_unmapped_area find a free area of the right size.
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	unsigned long rb_subtree_gap;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* Second cache line starts here. */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	struct mm_struct *vm_mm;	/* 相关的 mm_struct 结构体 */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * Access permissions of this VMA.
+</span></span><span class="line"><span class="cl">	 * See vmf_insert_mixed_prot() for discussion.
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	pgprot_t vm_page_prot;
+</span></span><span class="line"><span class="cl">	unsigned long vm_flags;		/* 标志, see mm.h. */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * For areas with an address space and backing store,
+</span></span><span class="line"><span class="cl">	 * linkage into the address_space-&gt;i_mmap interval tree.
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	struct {
+</span></span><span class="line"><span class="cl">		struct rb_node rb;
+</span></span><span class="line"><span class="cl">		unsigned long rb_subtree_last;
+</span></span><span class="line"><span class="cl">	} shared;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * A file&#39;s MAP_PRIVATE vma can be in both i_mmap tree and anon_vma
+</span></span><span class="line"><span class="cl">	 * list, after a COW of one of the file pages.	A MAP_SHARED vma
+</span></span><span class="line"><span class="cl">	 * can only be in the i_mmap tree.  An anonymous MAP_PRIVATE, stack
+</span></span><span class="line"><span class="cl">	 * or brk vma (with NULL file) can only be in an anon_vma list.
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	struct list_head anon_vma_chain; /* Serialized by mmap_lock &amp;
+</span></span><span class="line"><span class="cl">					  * page_table_lock */
+</span></span><span class="line"><span class="cl">	struct anon_vma *anon_vma;	/* Serialized by page_table_lock */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* Function pointers to deal with this struct. */
+</span></span><span class="line"><span class="cl">	const struct vm_operations_struct *vm_ops;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* Information about our backing store: */
+</span></span><span class="line"><span class="cl">	unsigned long vm_pgoff;		/* Offset (within vm_file) in PAGE_SIZE
+</span></span><span class="line"><span class="cl">					   units */
+</span></span><span class="line"><span class="cl">	struct file * vm_file;		/* 被映射的文件（如果存在） */
+</span></span><span class="line"><span class="cl">	void * vm_private_data;		/* was vm_pte (shared mem) */
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_SWAP
+</span></span><span class="line"><span class="cl">	atomic_long_t swap_readahead_info;
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">#ifndef CONFIG_MMU
+</span></span><span class="line"><span class="cl">	struct vm_region *vm_region;	/* NOMMU mapping region */
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_NUMA
+</span></span><span class="line"><span class="cl">	struct mempolicy *vm_policy;	/* NUMA policy for the VMA */
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">	struct vm_userfaultfd_ctx vm_userfaultfd_ctx;
+</span></span><span class="line"><span class="cl">} __randomize_layout;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>每个内存区域都对应进程地址空间中的唯一区间。vm_start 字段指向区间的首地址（最低地址）， vm_end 字段指向区间的尾地址（最高地址）之后的第一个字节。vm_start 和 vm_end 代表的区间是左闭右开的， vm_end - vm_start 的大小就是内存区间的长度。同一个地址空间内的不同内存区域之间不能重叠。</p>
+<p>vm_mm 字段指向和 VMA 相关的 mm_struct 结构体。每个 VMS 对其相关的 mm_struct 结构体来说都是唯一的，如果两个独立的进程将同一个文件映射到各自的地址空间，它们分别会有一个 vm_area_struct 结构体来标志自己的内存区域（被映射的文件）。如果两个线程共享一个地址空间，那么它们也同时共享其中的所有 vm_area_struct 结构体。</p>
+<h3 id="vma-标志" class="headerLink">
+    <a href="#vma-%e6%a0%87%e5%bf%97" class="header-mark"></a>VMA 标志</h3><p>VMA 标志是一种位标志，定义于 include/linux/mm.h。包含在 vm_flags 字段内，标志了内存区域所包含的 e 页面的行为和信息。和物理页的访问权限不同，VMA 标志反映了内核处理页面所需要遵守的行为准则，而不是硬件要求。</p>
+<div class="table-caption">
+  <span class="table-number">Table 1:</span>
+  VMA 标志
+</div>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>对 VMA 及其页面的影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VM_READ</td>
+<td>页面可读取</td>
+</tr>
+<tr>
+<td>VM_WRITE</td>
+<td>页面可写</td>
+</tr>
+<tr>
+<td>VM_EXEC</td>
+<td>页面可执行</td>
+</tr>
+<tr>
+<td>VM_SHARED</td>
+<td>页面可共享</td>
+</tr>
+<tr>
+<td>VM_IO</td>
+<td>区域映射设备 I/O 空间</td>
+</tr>
+<tr>
+<td>VM_RESERVED</td>
+<td>区域不能被换出</td>
+</tr>
+</tbody>
+</table>
+<p>这些标志根据要求组合构成 VMA 的访问控制权限，当访问 VMA 时，需要查看其访问权限。比如进程的对象代码映射区域可能会标志为 VM_READ 和 VM_EXEC，而没有标志 VM_WRITE；另一方面，可执行对象数据段的映射区域标志为 VM_READ 和 VM_WRITE，而 VM_EXEC 标志对它就毫无意义。</p>
+<p>VM_SHARED 指明了内存区域包含的映射是否可以在多进程间共享，如果该标志被设置，则我们称其为共享映射；如果违背设置，只有一个进程可以使用该映射的内容，称其为私有映射。</p>
+<p>VM_IO 标志内存区域中包含对设备 I/O 空间的映射。该标志通常在设备驱动程序执行 mmap() 函数进行 I/O 空间映射时才被设置，同时，该标志也表示该内存区域不能被包含在任何进程的 core dump 中。VM_RESERVED 也是在设备驱动程序进行映射时被设置。</p>
+<h3 id="vma-操作" class="headerLink">
+    <a href="#vma-%e6%93%8d%e4%bd%9c" class="header-mark"></a>VMA 操作</h3><p>vm_area_struct 结构体中的 vm_ops 字段指向与指定内存区域相关的操作函数表，内核使用表中的方法操作 VMA。 vm_area_struct 作为通用对象代表了任何类型的内存区域，而操作表描述针对特定的对象实例的特定方法。</p>
+<p>操作函数表由 vm_operations_struct 结构体表示，定义在文件 include/linux/mm.h 中：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">/*
+</span></span><span class="line"><span class="cl"> * These are the virtual MM functions - opening of an area, closing and
+</span></span><span class="line"><span class="cl"> * unmapping it (needed to keep files on disk up-to-date etc), pointer
+</span></span><span class="line"><span class="cl"> * to the functions called when a no-page or a wp-page exception occurs.
+</span></span><span class="line"><span class="cl"> */
+</span></span><span class="line"><span class="cl">struct vm_operations_struct {
+</span></span><span class="line"><span class="cl">	void (*open)(struct vm_area_struct * area);
+</span></span><span class="line"><span class="cl">	void (*close)(struct vm_area_struct * area);
+</span></span><span class="line"><span class="cl">	int (*split)(struct vm_area_struct * area, unsigned long addr);
+</span></span><span class="line"><span class="cl">	int (*mremap)(struct vm_area_struct * area);
+</span></span><span class="line"><span class="cl">	vm_fault_t (*fault)(struct vm_fault *vmf);
+</span></span><span class="line"><span class="cl">	vm_fault_t (*huge_fault)(struct vm_fault *vmf,
+</span></span><span class="line"><span class="cl">			enum page_entry_size pe_size);
+</span></span><span class="line"><span class="cl">	void (*map_pages)(struct vm_fault *vmf,
+</span></span><span class="line"><span class="cl">			pgoff_t start_pgoff, pgoff_t end_pgoff);
+</span></span><span class="line"><span class="cl">	unsigned long (*pagesize)(struct vm_area_struct * area);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* notification that a previously read-only page is about to become
+</span></span><span class="line"><span class="cl">	 * writable, if an error is returned it will cause a SIGBUS */
+</span></span><span class="line"><span class="cl">	vm_fault_t (*page_mkwrite)(struct vm_fault *vmf);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* same as page_mkwrite when using VM_PFNMAP|VM_MIXEDMAP */
+</span></span><span class="line"><span class="cl">	vm_fault_t (*pfn_mkwrite)(struct vm_fault *vmf);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* called by access_process_vm when get_user_pages() fails, typically
+</span></span><span class="line"><span class="cl">	 * for use by special VMAs that can switch between memory and hardware
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	int (*access)(struct vm_area_struct *vma, unsigned long addr,
+</span></span><span class="line"><span class="cl">		      void *buf, int len, int write);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* Called by the /proc/PID/maps code to ask the vma whether it
+</span></span><span class="line"><span class="cl">	 * has a special name.  Returning non-NULL will also cause this
+</span></span><span class="line"><span class="cl">	 * vma to be dumped unconditionally. */
+</span></span><span class="line"><span class="cl">	const char *(*name)(struct vm_area_struct *vma);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">#ifdef CONFIG_NUMA
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * set_policy() op must add a reference to any non-NULL @new mempolicy
+</span></span><span class="line"><span class="cl">	 * to hold the policy upon return.  Caller should pass NULL @new to
+</span></span><span class="line"><span class="cl">	 * remove a policy and fall back to surrounding context--i.e. do not
+</span></span><span class="line"><span class="cl">	 * install a MPOL_DEFAULT policy, nor the task or system default
+</span></span><span class="line"><span class="cl">	 * mempolicy.
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	int (*set_policy)(struct vm_area_struct *vma, struct mempolicy *new);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * get_policy() op must add reference [mpol_get()] to any policy at
+</span></span><span class="line"><span class="cl">	 * (vma,addr) marked as MPOL_SHARED.  The shared policy infrastructure
+</span></span><span class="line"><span class="cl">	 * in mm/mempolicy.c will do this automatically.
+</span></span><span class="line"><span class="cl">	 * get_policy() must NOT add a ref if the policy at (vma,addr) is not
+</span></span><span class="line"><span class="cl">	 * marked as MPOL_SHARED. vma policies are protected by the mmap_lock.
+</span></span><span class="line"><span class="cl">	 * If no [shared/vma] mempolicy exists at the addr, get_policy() op
+</span></span><span class="line"><span class="cl">	 * must return NULL--i.e., do not &#34;fallback&#34; to task or system default
+</span></span><span class="line"><span class="cl">	 * policy.
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	struct mempolicy *(*get_policy)(struct vm_area_struct *vma,
+</span></span><span class="line"><span class="cl">					unsigned long addr);
+</span></span><span class="line"><span class="cl">#endif
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * Called by vm_normal_page() for special PTEs to find the
+</span></span><span class="line"><span class="cl">	 * page for @addr.  This is useful if the default behavior
+</span></span><span class="line"><span class="cl">	 * (using pte_page()) would not find the correct page.
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	struct page *(*find_special_page)(struct vm_area_struct *vma,
+</span></span><span class="line"><span class="cl">					  unsigned long addr);
+</span></span><span class="line"><span class="cl">};
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="实际使用中的内存区域" class="headerLink">
+    <a href="#%e5%ae%9e%e9%99%85%e4%bd%bf%e7%94%a8%e4%b8%ad%e7%9a%84%e5%86%85%e5%ad%98%e5%8c%ba%e5%9f%9f" class="header-mark"></a>实际使用中的内存区域</h3><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">SOURCE</span><span class="o">=</span>/tmp/org/vma_t.c
+</span></span><span class="line"><span class="cl"><span class="nv">OUTPUT_FILE</span><span class="o">=</span>/tmp/org/vma_t
+</span></span><span class="line"><span class="cl"><span class="nv">CC</span><span class="o">=</span>gcc
+</span></span><span class="line"><span class="cl"><span class="nv">$CC</span> <span class="nv">$SOURCE</span>  -o <span class="nv">$OUTPUT_FILE</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">(</span><span class="nv">$OUTPUT_FILE</span> <span class="p">&amp;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="nv">PID</span><span class="o">=</span><span class="k">$(</span>pidof vma_t<span class="k">)</span>
+</span></span><span class="line"><span class="cl">pmap -d <span class="nv">$PID</span>
+</span></span><span class="line"><span class="cl"><span class="nb">kill</span> <span class="nv">$PID</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">133949:   /tmp/org/vma_t
+</span></span><span class="line"><span class="cl">Address           Kbytes Mode  Offset           Device    Mapping
+</span></span><span class="line"><span class="cl">000055ff11192000       4 r---- 0000000000000000 008:00003 vma_t
+</span></span><span class="line"><span class="cl">000055ff11193000       4 r-x-- 0000000000001000 008:00003 vma_t
+</span></span><span class="line"><span class="cl">000055ff11194000       4 r---- 0000000000002000 008:00003 vma_t
+</span></span><span class="line"><span class="cl">000055ff11195000       4 r---- 0000000000002000 008:00003 vma_t
+</span></span><span class="line"><span class="cl">000055ff11196000       4 rw--- 0000000000003000 008:00003 vma_t
+</span></span><span class="line"><span class="cl">00007fc26b040000      12 rw--- 0000000000000000 000:00000   [ anon ]
+</span></span><span class="line"><span class="cl">00007fc26b043000     152 r---- 0000000000000000 008:00003 libc.so.6
+</span></span><span class="line"><span class="cl">00007fc26b069000    1364 r-x-- 0000000000026000 008:00003 libc.so.6
+</span></span><span class="line"><span class="cl">00007fc26b1be000     332 r---- 000000000017b000 008:00003 libc.so.6
+</span></span><span class="line"><span class="cl">00007fc26b211000      16 r---- 00000000001ce000 008:00003 libc.so.6
+</span></span><span class="line"><span class="cl">00007fc26b215000       8 rw--- 00000000001d2000 008:00003 libc.so.6
+</span></span><span class="line"><span class="cl">00007fc26b217000      52 rw--- 0000000000000000 000:00000   [ anon ]
+</span></span><span class="line"><span class="cl">00007fc26b243000       8 rw--- 0000000000000000 000:00000   [ anon ]
+</span></span><span class="line"><span class="cl">00007fc26b245000       4 r---- 0000000000000000 008:00003 ld-linux-x86-64.so.2
+</span></span><span class="line"><span class="cl">00007fc26b246000     148 r-x-- 0000000000001000 008:00003 ld-linux-x86-64.so.2
+</span></span><span class="line"><span class="cl">00007fc26b26b000      40 r---- 0000000000026000 008:00003 ld-linux-x86-64.so.2
+</span></span><span class="line"><span class="cl">00007fc26b275000       8 r---- 0000000000030000 008:00003 ld-linux-x86-64.so.2
+</span></span><span class="line"><span class="cl">00007fc26b277000       8 rw--- 0000000000032000 008:00003 ld-linux-x86-64.so.2
+</span></span><span class="line"><span class="cl">00007ffc3198e000     136 rw--- 0000000000000000 000:00000   [ stack ]
+</span></span><span class="line"><span class="cl">00007ffc319eb000      16 r---- 0000000000000000 000:00000   [ anon ]
+</span></span><span class="line"><span class="cl">00007ffc319ef000       8 r-x-- 0000000000000000 000:00000   [ anon ]
+</span></span><span class="line"><span class="cl">mapped: 2332K    writeable/private: 228K    shared: 0K
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>该进程的全部地址空间约为 2332KB，只要大约 228KB 的内存区域是可写和私有的。如果一片内存范围是共享的或不可写的，那么内核只需要在内存中为文件(backing file)保留一份映射。</p>
+<p>设备标志为 000:00000 的区域就是零页——零页映射的内容全为零。如果将零也映射到可写的内存区域，那么该区域将全被初始化为 0。 bss 段需要的就是全 0 的内存区域。由于内存未被共享，所以只要一有进程写该处数据，那么该处数据就被拷贝出来（写时拷贝）,然后才被更新。</p>
+<p>每个和进程相关的内存区域都对应一个 vm_area_struct 结构体。</p>
+<h2 id="操作内存区域" class="headerLink">
+    <a href="#%e6%93%8d%e4%bd%9c%e5%86%85%e5%ad%98%e5%8c%ba%e5%9f%9f" class="header-mark"></a>操作内存区域</h2><p>内核时常需要在某个内存区域上执行一些操作，比如某个指定地址是否包含在某个内存区域中。这类操作非常频繁，另外它们也是 mmap() 例程的基础。为了方便执行这类对内存区域的操作，内核中定义了许多辅助函数。它们声明在 include/linux/mm.h 中。</p>
+<h3 id="find-vma" class="headerLink">
+    <a href="#find-vma" class="header-mark"></a>find_vma()</h3><p>为了找到一个给定的内存地址属于哪一个内存区域，内核提供了 find_vma() 函数。该函数定义在文件 mm/mmap.c 中：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">/* Look up the first VMA which satisfies  addr &lt; vm_end,  NULL if none. */
+</span></span><span class="line"><span class="cl">struct vm_area_struct *find_vma(struct mm_struct *mm, unsigned long addr)
+</span></span><span class="line"><span class="cl">{
+</span></span><span class="line"><span class="cl">	struct rb_node *rb_node;
+</span></span><span class="line"><span class="cl">	struct vm_area_struct *vma;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	/* Check the cache first. */
+</span></span><span class="line"><span class="cl">	vma = vmacache_find(mm, addr);
+</span></span><span class="line"><span class="cl">	if (likely(vma))
+</span></span><span class="line"><span class="cl">		return vma;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	rb_node = mm-&gt;mm_rb.rb_node;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	while (rb_node) {
+</span></span><span class="line"><span class="cl">		struct vm_area_struct *tmp;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		tmp = rb_entry(rb_node, struct vm_area_struct, vm_rb);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		if (tmp-&gt;vm_end &gt; addr) {
+</span></span><span class="line"><span class="cl">			vma = tmp;
+</span></span><span class="line"><span class="cl">			if (tmp-&gt;vm_start &lt;= addr)
+</span></span><span class="line"><span class="cl">				break;
+</span></span><span class="line"><span class="cl">			rb_node = rb_node-&gt;rb_left;
+</span></span><span class="line"><span class="cl">		} else
+</span></span><span class="line"><span class="cl">			rb_node = rb_node-&gt;rb_right;
+</span></span><span class="line"><span class="cl">	}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	if (vma)
+</span></span><span class="line"><span class="cl">		vmacache_update(addr, vma);
+</span></span><span class="line"><span class="cl">	return vma;
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">EXPORT_SYMBOL(find_vma);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>该函数在指定的地址空间中搜索第一个 vm_end 大于 addr 的内存区域。换句话说，该函数寻找第一个包含 addr 或首地址大于 addr 的内存区域，如果没有这样的区域，该函数返回 NULL；否则返回指向匹配的内存区域的 vm_area_struct 结构体指针。注意，由于返回的 VMA 首地址可能大于 addr，所以指定的地址不一定就包含在返回的 VMA 中。</p>
+<p>因为很可能在对某个 VMA 执行操作后，还有其他更多的操作会对该 VMA 接着进行操作，所以 find_vma() 函数返回的结果被缓存在内存描述符的 mmap_cache 字段中。实践证明，被缓存的 VMA 会有相当好的命中率（实践中大约 30% ~ 40%），而且检查被缓存的 VMA 速度会很快，如果指定的地址不再缓存中，那么必须搜索和内存描述符相关的所有内存区域。这种搜索通过红黑树进行。</p>
+<h3 id="find-vma-prev" class="headerLink">
+    <a href="#find-vma-prev" class="header-mark"></a>find_vma_prev()</h3><p>find_vma_prev() 函数和 find_vma() 工作方式相同，但是它返回第一个小于 addr 的 VMA。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">/*
+</span></span><span class="line"><span class="cl"> * Same as find_vma, but also return a pointer to the previous VMA in *pprev.
+</span></span><span class="line"><span class="cl"> */
+</span></span><span class="line"><span class="cl">struct vm_area_struct *
+</span></span><span class="line"><span class="cl">find_vma_prev(struct mm_struct *mm, unsigned long addr,
+</span></span><span class="line"><span class="cl">			struct vm_area_struct **pprev)
+</span></span><span class="line"><span class="cl">{
+</span></span><span class="line"><span class="cl">	struct vm_area_struct *vma;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	vma = find_vma(mm, addr);
+</span></span><span class="line"><span class="cl">	if (vma) {
+</span></span><span class="line"><span class="cl">		*pprev = vma-&gt;vm_prev;
+</span></span><span class="line"><span class="cl">	} else {
+</span></span><span class="line"><span class="cl">		struct rb_node *rb_node = rb_last(&amp;mm-&gt;mm_rb);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		*pprev = rb_node ? rb_entry(rb_node, struct vm_area_struct, vm_rb) : NULL;
+</span></span><span class="line"><span class="cl">	}
+</span></span><span class="line"><span class="cl">	return vma;
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="find-vma-insersection" class="headerLink">
+    <a href="#find-vma-insersection" class="header-mark"></a>find_vma_insersection()</h3><p>find_vma_insersection() 函数返回第一个和指定地址区间相交的 VMA。该函数是内联函数，所以定义在文件 include/linux/mm.h 中：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">/* Look up the first VMA which intersects the interval start_addr..end_addr-1,
+</span></span><span class="line"><span class="cl">   NULL if none.  Assume start_addr &lt; end_addr. */
+</span></span><span class="line"><span class="cl">static inline struct vm_area_struct * find_vma_intersection(struct mm_struct * mm, unsigned long start_addr, unsigned long end_addr)
+</span></span><span class="line"><span class="cl">{
+</span></span><span class="line"><span class="cl">	struct vm_area_struct * vma = find_vma(mm,start_addr);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	if (vma &amp;&amp; end_addr &lt;= vma-&gt;vm_start)
+</span></span><span class="line"><span class="cl">		vma = NULL;
+</span></span><span class="line"><span class="cl">	return vma;
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="mmap-和-do-mmap-创建地址区间" class="headerLink">
+    <a href="#mmap-%e5%92%8c-do-mmap-%e5%88%9b%e5%bb%ba%e5%9c%b0%e5%9d%80%e5%8c%ba%e9%97%b4" class="header-mark"></a>mmap() 和 do_mmap(): 创建地址区间</h2><p>内核使用 do_mmap() 函数创建一个新的线性地址空间。但是说该函数创建了一个新 VMA 并不准确，因为如果创建的地址区间和一个已经存在的地址区间相邻，并且它们具有相同的访问权限的话，两个区间将合并为一个。如果不能合并，就确实需要创建一个 VMA 了。但无论哪种情况， do_mmap() 函数都会将一个地址区间加入到进程的地址空间中——无论是扩展已存在的内存区域还是创建一个新的区域。</p>
+<p>do_mmap() 函数声明在 include/linux/mm.h 中：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">extern unsigned long do_mmap(struct file *file, unsigned long addr,
+</span></span><span class="line"><span class="cl">	unsigned long len, unsigned long prot, unsigned long flags,
+</span></span><span class="line"><span class="cl">	unsigned long pgoff, unsigned long *populate, struct list_head *uf);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>prot 参数指定内存区域中页面的访问权限。访问权限标志定义在文件 include/uapi/asm-generic/mman-common.h 中，</p>
+<div class="table-caption">
+  <span class="table-number">Table 2:</span>
+  页保护标志
+</div>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>对新建区间中页的要求</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>#define PROT_READ 0x1</td>
+<td>page can be read，对应于 VM_READ</td>
+</tr>
+<tr>
+<td>#define PROT_WRITE 0x2</td>
+<td>page can be written，对应于 VM_WRITE</td>
+</tr>
+<tr>
+<td>#define PROT_EXEC   0x4</td>
+<td>page can be executed，对应于 VM_EXEC</td>
+</tr>
+<tr>
+<td>#define PROT_NONE   0x0</td>
+<td>page can not be accessed</td>
+</tr>
+</tbody>
+</table>
+<p>flags 参数指定了 VMA 标志，这些标志指定类型并改变映射的行为。它们在文件 include/uapi/asm-generic/mman-common.h 中定义。</p>
+<div class="table-caption">
+  <span class="table-number">Table 3:</span>
+  映射标志
+</div>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>对新区间的要求</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MAP_SHARED</td>
+<td>映射可以被共享</td>
+</tr>
+<tr>
+<td>MAP_PRIVATE</td>
+<td>映射不能被共享</td>
+</tr>
+<tr>
+<td>MAP_FIXED</td>
+<td>新区间必须开始于指定的地址 addr</td>
+</tr>
+<tr>
+<td>MAP_ANONYMOUS</td>
+<td>映射不是 file-backed，而是匿名的</td>
+</tr>
+<tr>
+<td>MAP_EXECUTABLE</td>
+<td>对应于 VM_EXECUTABLE</td>
+</tr>
+<tr>
+<td>MAP_PUPULATE</td>
+<td>填充页表</td>
+</tr>
+<tr>
+<td>MAP_NORESERVE</td>
+<td>不需要为映射保留空间</td>
+</tr>
+<tr>
+<td>MAP_NONBLOCK</td>
+<td>在 I/O 操作上不堵塞</td>
+</tr>
+</tbody>
+</table>
+<p>如果系统调用 do_mmap() 的参数中有无效参数，那么它返回一个负值；否则，它会在虚拟内存中分配一个合适的新内存区域。如果可能的话，将新区域和邻近区域进行合并，否则内核从 vm_area_cachep 长字节（slab）缓存中分配一个 vm_area_struct 结构体，并且使用 vma_link() 函数将新分配的内存区域添加到地址空间的内存区域链表和红黑树中，随后还要更新内存描述符中的 total_vm 字段，然后才返回新分配的地址区间的初始地址。</p>
+<p>在用户空间可以通过 mmap() 系统调用获取内核函数 do_mmap() 的功能。mmap() 系统调用定义如下;</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">void *syscall(SYS_mmap2, unsigned long addr, unsigned long length,
+</span></span><span class="line"><span class="cl">                     unsigned long prot, unsigned long flags,
+</span></span><span class="line"><span class="cl">                     unsigned long fd, unsigned long pgoffset);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>该系统调用是 mmap() 调用的第二种变种，所以起名为 mmap2()。最原始的 mmap() 调用中最后一个参数是字节偏移量，目前这个 mmap2() 使用页面偏移量作最后一个参数。</p>
+<p>原始的 mmap() 调用由 POSIX 定义，仍然在 C 库中作为 mmap() 使用，但是内核中已经没有对应的实现了，而实现的是新方法 mmap2()。</p>
+<p>虽然 C 库仍然可以使用原始版本的映射方法，但是它其实还是基于函数 mmap2() 进行的，因为对原始 mmap() 方法的调用是通过将字节偏移转化为页面偏移，从而转化为对 mmap2() 函数的调用来实现的。</p>
+<h2 id="munmap-和-do-munmap-删除地址区间" class="headerLink">
+    <a href="#munmap-%e5%92%8c-do-munmap-%e5%88%a0%e9%99%a4%e5%9c%b0%e5%9d%80%e5%8c%ba%e9%97%b4" class="header-mark"></a>munmap() 和 do_munmap()：删除地址区间</h2><p>定义在 mm/mmap.c 中。
+系统调用 munmap() 给用户空间程序提供了一种从自身地址空间删除指定地址区间的方法，它是对 __do_munmap() 函数的一个封装，它和系统调用 mmap() 的作用相反：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">SYSCALL_DEFINE2(munmap, unsigned long, addr, size_t, len)
+</span></span><span class="line"><span class="cl">{
+</span></span><span class="line"><span class="cl">	addr = untagged_addr(addr);
+</span></span><span class="line"><span class="cl">	profile_munmap(addr);
+</span></span><span class="line"><span class="cl">	return __vm_munmap(addr, len, true);
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">static int __vm_munmap(unsigned long start, size_t len, bool downgrade)
+</span></span><span class="line"><span class="cl">{
+</span></span><span class="line"><span class="cl">	int ret;
+</span></span><span class="line"><span class="cl">	struct mm_struct *mm = current-&gt;mm;
+</span></span><span class="line"><span class="cl">	LIST_HEAD(uf);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	if (mmap_write_lock_killable(mm))
+</span></span><span class="line"><span class="cl">		return -EINTR;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	ret = __do_munmap(mm, start, len, &amp;uf, downgrade);
+</span></span><span class="line"><span class="cl">	/*
+</span></span><span class="line"><span class="cl">	 * Returning 1 indicates mmap_lock is downgraded.
+</span></span><span class="line"><span class="cl">	 * But 1 is not legal return value of vm_munmap() and munmap(), reset
+</span></span><span class="line"><span class="cl">	 * it to 0 before return.
+</span></span><span class="line"><span class="cl">	 */
+</span></span><span class="line"><span class="cl">	if (ret == 1) {
+</span></span><span class="line"><span class="cl">		mmap_read_unlock(mm);
+</span></span><span class="line"><span class="cl">		ret = 0;
+</span></span><span class="line"><span class="cl">	} else
+</span></span><span class="line"><span class="cl">		mmap_write_unlock(mm);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	userfaultfd_unmap_complete(mm, &amp;uf);
+</span></span><span class="line"><span class="cl">	return ret;
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="页表" class="headerLink">
+    <a href="#%e9%a1%b5%e8%a1%a8" class="header-mark"></a>页表</h2><p>应用程序操作的对象是映射到物理内存之上的虚拟内存，处理器直接操作的却是物理内存。所以当应用程序访问一个虚拟地址时，首先必须将虚拟地址转化成物理地址，然后处理器才能解析地址访问请求。地址的转换工作需要查询页表才能完成，概括地讲，地址转换需要将虚拟地址分段，使每段虚拟地址都作为一个索引指向页表，而页表项则指向下一级别的页表或指向最终的物理页面。</p>
+<p>Linux 中使用三级页表完成地址转换（目前一般是四级或五级）。利用多级页表能够节约地址转换需占用的存放空间。</p>
+<p>顶级页表是页全局目录（PGD)，它包含了一个 pgd_t 类型数组，多数体系结构中 pgd_t 类型等同于无符号长整型。 PGD 中的表项指向二级页目录中的表项： PMD。</p>
+<p>二级页表是中间页目录（PMD），它是个 pmd_t 类型数组，其中的表项指向 PTE 中的表项。</p>
+<p>最后一级的页表简称页表，其中包含了 pte_t 类型的页表项，该页表项指向物理页面。</p>
+<p>多数体系结构中，搜索页表的工作是由硬件完成的（至少某种程度上）。虽然通常操作中，很多使用页表的工作可以由硬件执行，但是只有在内核正确设置页表的前提下，硬件才能方便地操作它们。</p>
+<p>每个进程都有自己的页表（线程共享页表）。内存描述符的 pgd 字段指向的就是进程的页全局目录。注意， <strong>操作和检索页表时必须使用 page_table_lock 锁</strong> ，该锁在相应的进程的内存描述符中，以防止竞争条件。</p>
+<p>页表对应的结构体依赖于具体的体系结构，定义在文件 include/asm-generic/page.h 中。</p>
+<p>由于几乎每次对虚拟内存中的页面访问都必须先解析它，从而得到物理内存中的对应地址，所以页表操作的性能非常关键。但不幸的是，搜索内存中的物理地址速度很有限，因此为了加快搜索，多数体系结构都实现了一个 TLB。TLB 作为一个将虚拟地址映射到物理地址的硬件缓存，当请求访问一个虚拟地址时，处理器将首先检查 TLB 中是否缓存了该虚拟地址到物理地址的映射，如果缓存命中，则直接返回；否则，需要通过页表搜索需要的物理地址。</p>
+<p>硬件完成了有关页表的部分工作，但是页表的管理仍然是内核的关键部分。</p>
+</div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-22</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/linux-kernel-%E5%9D%97-i-o-%E5%B1%82/" class="prev" rel="prev" title="Linux Kernel 块 I/O 层"><i class="fas fa-angle-left fa-fw"></i>Linux Kernel 块 I/O 层</a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>

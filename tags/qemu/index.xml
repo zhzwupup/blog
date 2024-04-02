@@ -1,0 +1,14 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>QEMU - 标签 - Zhao&#39;s blog</title>
+        <link>http://localhost:1313/tags/qemu/</link>
+        <description>QEMU - 标签 - Zhao&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 17 Jan 2024 00:00:00 &#43;0800</lastBuildDate><atom:link href="http://localhost:1313/tags/qemu/" rel="self" type="application/rss+xml" /><item>
+    <title>使用 QEMU 和 GDB 调试 Linux 内核</title>
+    <link>http://localhost:1313/posts/%E4%BD%BF%E7%94%A8-qemu-%E5%92%8C-gdb-%E8%B0%83%E8%AF%95-linux-%E5%86%85%E6%A0%B8/</link>
+    <pubDate>Wed, 17 Jan 2024 00:00:00 &#43;0800</pubDate><author>
+        <name>Zhao</name>
+    </author><guid>http://localhost:1313/posts/%E4%BD%BF%E7%94%A8-qemu-%E5%92%8C-gdb-%E8%B0%83%E8%AF%95-linux-%E5%86%85%E6%A0%B8/</guid>
+    <description><![CDATA[编辑 .envrc 1 2 3 #!/bin/bash export CROSS_COMPILE=/opt/arm/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu- export ARCH=arm64 编译内核 kernel 下载内核版本 linux-5.4.50 配置编译选项 1 2 3 make defconfig make menuconfig make 制作根文件系统（busybox） 配置编译选项 1 2 3 make menuconfig make -j4 make install menuconfig 时]]></description>
+</item></channel>
+</rss>

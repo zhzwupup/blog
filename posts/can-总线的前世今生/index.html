@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>CAN 总线的前世今生 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="CAN 总线的前世今生" />
+<meta property="og:description" content="CAN总线35周年特别篇 &ndash; CAN总线的前世今生 本文整理翻译自 CAN in Automation（CiA），通过这个帖子大家会对当前市场上各种 CAN 名词有个" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-10-20T03:04:00+08:00" />
+<meta property="article:modified_time" content="2024-01-17T19:20:38+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CAN 总线的前世今生"/>
+<meta name="twitter:description" content="CAN总线35周年特别篇 &ndash; CAN总线的前世今生 本文整理翻译自 CAN in Automation（CiA），通过这个帖子大家会对当前市场上各种 CAN 名词有个"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/" /><link rel="prev" href="http://localhost:1313/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" /><link rel="next" href="http://localhost:1313/posts/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "CAN 总线的前世今生",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F\/"
+        },"genre": "posts","keywords": "CAN","wordcount":  5819 ,
+        "url": "http:\/\/localhost:1313\/posts\/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F\/","datePublished": "2023-10-20T03:04:00+08:00","dateModified": "2024-01-17T19:20:38+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#从构思到第一个芯片">从构思到第一个芯片</a></li>
+        <li><a href="#标准化和规格">标准化和规格</a></li>
+        <li><a href="#can-时代的先锋">CAN 时代的先锋</a></li>
+        <li><a href="#从理论到实践">从理论到实践</a></li>
+        <li><a href="#时间触发的通讯">时间触发的通讯</a></li>
+        <li><a href="#当局批准">当局批准</a></li>
+        <li><a href="#can-fd-开发">CAN FD 开发</a></li>
+        <li><a href="#can-的未来是光明的">CAN 的未来是光明的</a></li>
+        <li><a href="#第三代-can">第三代 CAN</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">CAN 总线的前世今生</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/"><i class="far fa-folder fa-fw"></i>嵌入式</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-10-20">2023-10-20</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-17">2024-01-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 5819 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 12 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#从构思到第一个芯片">从构思到第一个芯片</a></li>
+        <li><a href="#标准化和规格">标准化和规格</a></li>
+        <li><a href="#can-时代的先锋">CAN 时代的先锋</a></li>
+        <li><a href="#从理论到实践">从理论到实践</a></li>
+        <li><a href="#时间触发的通讯">时间触发的通讯</a></li>
+        <li><a href="#当局批准">当局批准</a></li>
+        <li><a href="#can-fd-开发">CAN FD 开发</a></li>
+        <li><a href="#can-的未来是光明的">CAN 的未来是光明的</a></li>
+        <li><a href="#第三代-can">第三代 CAN</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p><a href="https://www.armbbs.cn/forum.php?mod=viewthread&amp;tid=104480" target="_blank" rel="noopener noreferrer">CAN总线35周年特别篇 &ndash; CAN总线的前世今生</a></p>
+<p>本文整理翻译自 CAN in Automation（CiA），通过这个帖子大家会对当前市场上各种 CAN 名词有个
+全面系统的认识</p>
+<p>1986 年 2 月，Robert Bosch GmbH 在汽车工程师协会（SAE）大会上推出了控制器局域网
+（CAN）串行总线系统。这是有史以来最成功的网络协议之一诞生的时刻。如今，欧洲几乎所有汽车都配
+备了至少一个 CAN 网络。CAN 还用于其他类型的车辆，从火车到轮 船，以及工业控制中，CAN 是最主
+要的总线协议之一，甚至可能是全球领先的串行总线系统。</p>
+<h2 id="从构思到第一个芯片" class="headerLink">
+    <a href="#%e4%bb%8e%e6%9e%84%e6%80%9d%e5%88%b0%e7%ac%ac%e4%b8%80%e4%b8%aa%e8%8a%af%e7%89%87" class="header-mark"></a>从构思到第一个芯片</h2><p>在 1980 年代初期，博世的工程师正在评估现有的串行总线系统，以探讨其在汽车中的可能用途。
+由于没有可用的网络协议能够满足汽车工程师的要求，因此 Uwe Kiencke 于 1983 年开始开发新的
+串行总线系统。</p>
+<p>新的总线协议主要是要增加新的功能 &mdash; 减少线束不是 CAN 发展背后的驱动力。奔驰的工程
+师很早就参与了新的串行总线系统的规范制定阶段，英特尔作为潜在的主要半导体供应商也参与了进来。
+来自德国 Braunschweig-Wolfenbüttel 的应用科学大学（现为 Ostfalia University of
+Applied Science）的 Wolfhard Lawrenz 教授被聘为顾问，他将新的网络协议命名为
+“Controller Area Network（控制器区域网络）”。来自卡尔斯鲁厄大学的 Horst Wettstein
+教授也提供了学术帮助。</p>
+<p>1986 年 2 月，CAN 诞生了：在底特律的 SAE 大会上，新的总线系统被称为
+“Automotive Serial Controller Area Network（汽车 串行控制器局域网）”。Uwe Kiencke
+，Siegfried Dais 和 Martin Litschel 介绍了多主网络协议。它基于一种非破坏性仲裁机制，该
+机制允许总线访问具有最高优先级的帧而没有任何延迟。没有中心控制器。此外，CAN 之父（上述人员
+以及博世员工 Wolfgang Borst， Wolfgang Botzenhard，Otto Karl，Helmut Schelling 和
+Jan Unruh）已经实现了几种错误检测机制。错误处理还包括自动断开故障总 线节点，以保持其余节
+点之间的通信。传输的帧不是由帧发送器或帧接收器的节点地址（几乎在所有其他总线系统中）识别的，
+而是 由它们的内容识别的。表示帧有效载荷的标识符，还具有指定帧在网络段内的优先级。</p>
+<p>随后，许多介绍该创新通信协议的演讲和出版物，直到 1987 年中期（比计划提前两个月），
+英特尔才交付了第一款 CAN 控制器芯片 82526。这是 CAN 协议的第一个硬件实现。在短短四年内，
+一个想法就变成了现实。此后不久，飞利浦半导体推出了 82C200。CAN 控制器的这两个最早的祖先
+在接受过滤和帧处理方面有很大的不同。一方面，与飞利浦选择的 BasicCAN 实施相比，英特尔所青
+睐的 FullCAN 概念要求所连接的微控制器的 CPU 负载更少。另一方面，FullCAN 设备在可以接收
+的帧数方面受到限制。BasicCAN 控制器还需要更少的硅。在当今的 CAN 控制器中，实现了接受过滤
+和帧处理这两种概念的混合。这使 BasicCAN 和 FullCAN 的误导性术语过时了。</p>
+<figure><img src="/ox-hugo/2023-10-20_01-06-22_003002q8bt8jzcjhz2a82h.png"/>
+</figure>
+
+<figure><img src="/ox-hugo/2023-10-20_01-06-29_003009u3iujst8txwsxqis.png"/>
+</figure>
+
+<h2 id="标准化和规格" class="headerLink">
+    <a href="#%e6%a0%87%e5%87%86%e5%8c%96%e5%92%8c%e8%a7%84%e6%a0%bc" class="header-mark"></a>标准化和规格</h2><p>博世 CAN 规范（2.0 版）已于 1990 年代初提交国际标准化。在发生了几场政治纠纷之后，尤其是
+涉及到法国一些主要汽车制造商开发的 “车载区域网络”（VAN，Vehicle Area Network），ISO
+11898 标准于 1993 年 11 月发布。除了 CAN 协议外，它还标准化了物理层，速率高达 1 Mbit/s。
+同时，ISO 11519-2 对通过 CAN 的低功耗，容错数据传输方式进行了标准化。由于该标准存在缺陷，
+因此从未实施。在 1995 年，ISO 11898 标准通过附录进行了扩展，该附录描述了使用 29 位 CAN
+标识符的扩展帧格式。</p>
+<p>不幸的是，所有已发布的 CAN 规范和标准化都包含错误或不完整。为避免不兼容的 CAN 实施
+方案，Bosch 确保所有 CAN 芯片均符合 Bosch CAN 参考模型。此外，由 Wolfhard Lawrenz
+教授领导的德国 Braunschweig-Wolfenbütte 应用科学大学已经进行了几年的 CAN 一致性测试。
+所使用的测试模式基于 ISO 16845 一致性测试计划标准系列。今天，多家测试机构可提供 CAN
+一致性测试服务。</p>
+<p>修订后的 CAN 规范已标准化。ISO 11898-1 描述了 “CAN 数据链路层”，ISO 11898-2 标准
+化了 “非容错” CAN 物理层，而 ISO 11898-3 指定了 “容错 CAN 物理层”。ISO 11992 系列
+（卡车和拖车接口）和 ISO 11783（农业和林业机械）系列指定了基于 SAE J1939 网络方法的应用
+程序配置文件。它们不兼容，因为物理层规范不同。</p>
+<figure><img src="/ox-hugo/2023-10-20_01-07-01_003011uf9nq243o2s02n49.png"/>
+</figure>
+
+<h2 id="can-时代的先锋" class="headerLink">
+    <a href="#can-%e6%97%b6%e4%bb%a3%e7%9a%84%e5%85%88%e9%94%8b" class="header-mark"></a>CAN 时代的先锋</h2><p>尽管 CAN 最初被开发用于汽车，但最初的应用来自不同的市场领域。特别是在北欧，CAN 在早期已经
+非常流行。在芬兰，电梯制造商 Kone 使用了 CAN 总线。瑞典工程办公室 Kvaser 向一些纺织机械
+制造商（Lindauer Dornier 和 Sulzer）及其供应商建议将 CAN 作为机器内部的通信协议。在
+Lars-Berno Fredriksson 的领导下，这些公司成立了 “CAN 纺织品用户小组”。到 1989 年，
+他们制定了沟通原则，有助于在 1990 年代初塑造发展环境 “CAN Kingdom”。尽管相对于 OSI 参考
+模型，CAN Kingdom 不是应用程序层，</p>
+<p>在荷兰，飞利浦医疗系统决定将 CAN 用于其 X 射线机的内部联网，从而加入了工业 CAN 用户。主
+要由 Tom Suters 开发的 “Philips 消息规范”（PMS）代表了 CAN 网络的第一个应用层。来自
+德国 Weingarten 应用科学大学的 Konrad Etschberger 教授也有相同的想法，在他负责的
+Steinbeis 过程自动化转移中心（STZP）中，他开发了类似的协议。</p>
+<p>尽管第一个标准化的高层协议开始出现，但大多数 CAN 开拓者还是采用了整体法。通信功能，网络
+管理和应用程序代码是一种软件。即使某些用户希望采用模块化的方法，但他们仍有专有解决方案的
+缺点。增强和维护 CAN 高层协议的必要努力被低估了 &mdash; 今天仍然部分是正确的。</p>
+<p>在 1990 年代初，是时候成立了一个用户小组，以推广 CAN 协议并促进其在许多应用中的使用。
+1992 年 1 月，当时的《 VMEbus》杂志编辑（出版商：Franzis）的 Holger Zeltwanger 吸引
+了用户和制造商一起建立了一个中立的平台，用于 CAN 的技术增强以及串行总线系统的市场营销。
+两个月后，“CAN in Automation”（CiA）国际用户和制造商小组正式成立。在早期，CAN 通讯已经出版。</p>
+<p>仅几周后发布的第一份技术出版物涉及物理层：CiA 建议仅使用符合 ISO 11898 的 CAN 收发器。
+如今，制造商专用的 EIA-485 收发器在 CAN 网络中非常普遍，那个时候，并不总是兼容，应该已经完全消失了。</p>
+<p>CiA 的首要任务之一是规范 CAN 应用层。利用飞利浦医疗系统公司和 STZP 提供的现有材料，并在
+CiA 其他成员的帮助下，开发了“CAN 应用程序层”（CAL），也称为 “绿皮书”。在使用 CAN 制定
+规范时，CiA 的主要任务之一是组织 CAN 专家与那些希望在 CAN 上变得更多知识的专家之间的信息
+交换。因此，自 1994 年以来，举行了国际 CAN 会议（iCC）。</p>
+<p>LAV（德国农业车辆协会）追求另一种学术方法。自 1980 年代后期以来，已经开发了基于 CAN 的
+农用车辆总线系统（LBS）。但是在这项工作可以成功完成之前，国际委员会已决定支持美国的解决方案
+J1939（ISO 11783）。此应用程序配置文件也基于 CAN，由 SAE 卡车和公共汽车协会的委员会定义。
+J1939 是一种非模块化方法，非常易于使用，但也非常不灵活。</p>
+<p>还为卡车开发了 CAN 的标准化。卡车和拖车之间的网络标准化为 ISO11992。该协议基于 J1939，
+从 2006 年起必须在欧洲使用。汽车的趋势是向 OSEK-COM 和 OSEK-NM，通信协议和网络管理迈进。
+两者均已提交国际标准化。到目前为止，汽车制造商一直在使用专有软件解决方案。</p>
+<figure><img src="/ox-hugo/2023-10-20_01-07-56_003012izgdqxgxkq4e4z6q.png"/>
+</figure>
+
+<h2 id="从理论到实践" class="headerLink">
+    <a href="#%e4%bb%8e%e7%90%86%e8%ae%ba%e5%88%b0%e5%ae%9e%e8%b7%b5" class="header-mark"></a>从理论到实践</h2><p>当然，将 CAN 内核实现到其微控制器中的半导体供应商主要集中在汽车行业。自 1990 年代中期以来，
+英飞凌科技公司（以前为西门子半导体公司）和摩托罗拉公司（外包为飞思卡尔，后来被 NXP 收购）
+已经向欧洲汽车制造商及其供应商运送了大量 CAN 控制器。自 1990 年代末以来，远东半导体供应商
+也开始提供 CAN 控制器。NEC 在 1994 年推出了他们传奇的 CAN 芯片 72005，但为时过早 - 该
+组件在商业上并不成功。</p>
+<p>自 1991 年以来，奔驰一直在其汽车中使用 CAN。第一步，通过 CAN 连接负责发动机管理的电子
+控制单元。1995 年，宝马在其 7 系汽车中使用了带有五个 ECU（电子控制单元）的树 / 星拓扑
+CAN 网络。第二步，跟随人体电子设备所需的控制单元。实现了两个物理上分离的 CAN 网络，通常
+通过网关连接。其他汽车制造商也沿用了奔驰的方式，通常在乘用车中实现两个 CAN 网络。如今，
+他们都在自己的车辆中实现了多个 CAN 网络。</p>
+<p>在 1990 年代初期，美国机械工程公司 Cincinnati Milacron 的工程师与 Allen-Bradley 和
+Honeywell Microswitch 共同成立了一家合资公司，以基于 CAN 的控制和通信项目。但是，不久
+之后，重要的项目成员换了工作，合资企业瓦解了。但是 Allen-Bradley 和 Honeywell 分别继续
+工作。这导致了至少在较低的通信层中非常相似的两个高层协议 “DeviceNet” 和 “智能分布式系统”
+（SDS）。1994 年初，Allen-Bradley 将 DeviceNet 规范移交给了 “开放 DeviceNet 供应商
+协会”（ODVA），这促进了 DeviceNet 的普及。Honeywell 未能在 SDS 上采取类似的方式，这使
+SDS 看起来更像是 Honeywell 微动的内部解决方案。DeviceNet 是专为工厂自动化而开发的，因此，
+它本身就是 Profibus-DP 和 Interbus 等协议的直接对手。提供现成的即插即用功能，DeviceNet
+已成为美国这个特定细分市场中领先的总线系统。</p>
+<p>在欧洲，几家公司尝试使用 CAL。尽管 CAL 方法在学术上是正确的，并且可以在工业应用中使用它，
+但是每个用户都需要设计一个新的配置文件，因为 CAL 是真正的应用程序层。CAL 可以看作是独立于
+应用程序的 CAN 解决方案必不可少的学术步骤，但它从未在该领域获得广泛认可。</p>
+<p>自 1993 年以来，在 Esprit 项目 ASPIC 的范围内，由博世领导的欧洲财团一直在开发 CANopen
+的原型。它是用于生产单元内部网络的 CAL 配置文件。在学术方面，来自德国罗伊特林根应用科学大学
+的 Gerhard Gruhler 教授和来自英国纽卡斯尔大学的 Mohammed Farsi 博士参加了有史以来最成功
+的 Esprit 活动之一。项目完成后，CANopen 规范移交给了 CiA，以进行进一步的开发和维护。1995 年，
+发布了经过完全修订的 CANopen 通信配置文件，并在短短五年内成为欧洲最重要的标准化嵌入式网络。</p>
+<p>第一个 CANopen 网络用于内部机器通信，尤其是驱动器。CANopen 提供了很高的灵活性和可配置性。
+高层协议已用于多个非常不同的应用领域（工业自动化，航海电子，军用车辆等），同时其国际标准为
+EN 50325-4（2003）。CANopen 尤其在欧洲使用。意大利的注塑机，德国的木锯和机器，英国的
+卷烟机，法国的起重机，奥地利的搬运机以及瑞士的钟表制造机只是工业自动化和机械制造中的几个例子。
+在美国，推荐将 CANopen 用于叉车并将其用于信件分拣机中。</p>
+<p>CANopen 不仅定义了应用程序层和通信配置文件，而且还定义了可编程系统以及不同设备，接口和
+应用程序配置文件的框架。这是整个行业（例如印刷机，海事应用，医疗系统）决定在 1990 年代后期
+使用 CANopen 的重要原因。</p>
+<p>借助 DeviceNet 和 CANopen，可以使用两个标准化的（IEC 62026-3 或 EN 50325-4/5）应用层，
+以满足不同的工业自动化市场的需求。DeviceNet 针对工厂自动化进行了优化，而 CANopen 特别适合
+于各种机器控制中的嵌入式网络。这使得专有的应用程序层已过时。定义特定于应用程序的应用程序层
+的必要性已成为历史（也许，对于某些专用的大容量嵌入式系统而言除外）。</p>
+<h2 id="时间触发的通讯" class="headerLink">
+    <a href="#%e6%97%b6%e9%97%b4%e8%a7%a6%e5%8f%91%e7%9a%84%e9%80%9a%e8%ae%af" class="header-mark"></a>时间触发的通讯</h2><p>在 2000 年初，一个由数家公司组成的 ISO 特别工作组为 CAN 帧的时间触发传输定义了一个协议。
+Bernd Mueller 博士，Thomas Fuehrer 博士和其他博世员工，以及半导体行业和学术研究专家
+共同定义了协议 “CAN 上的时间触发通信”（TTCAN，Time-triggered communication on CAN）。</p>
+<p>这种 CAN 扩展可以实现时间等量的帧传输和通过 CAN 的闭环控制的实现，而且还可以在 x-by-wire
+的应用中使用 CAN。由于 CAN 协议未更改，因此可以通过同一物理总线系统传输时间触发帧和事件
+触发帧。但是，汽车行业尚未采用 TTCAN。而且，工业用户很少使用时间触发的协议扩展。他们改用
+CANopen 中指定的同步传输功能，可以说是一种软时间触发方法。</p>
+<figure><img src="/ox-hugo/2023-10-20_01-08-40_003013caeifp7axt5xwz53.png"/>
+</figure>
+
+<h2 id="当局批准" class="headerLink">
+    <a href="#%e5%bd%93%e5%b1%80%e6%89%b9%e5%87%86" class="header-mark"></a>当局批准</h2><p>在 90 年代后期，发明了几种基于 CAN 的专有安全协议。幸存下来的是德国 Pilz 生产的
+Safetybus p。在 1999 年，CiA 开始开发 CANopen-Safety 协议，该协议已获得德国 TüV 的批准。
+经过标准化机构的大量参与之后，此 CANopen 扩展（CiA 304）在 EN 50325-5（2009）中进行了
+国际标准化。</p>
+<p>DeviceNet 使用 CIP 安全协议扩展。全球领先的船级社之一的德国劳埃德船级社（Germanischer Lloyd）
+已批准了适用于海事应用的 CANopen 框架（CiA 307）。除其他外，该框架规定了从默认的 CANopen
+网络到冗余总线系统的自动切换。如今，这些功能已在 CiA 302 系列其他 CANopen 应用层功能中
+得到了概括和指定。</p>
+<h2 id="can-fd-开发" class="headerLink">
+    <a href="#can-fd-%e5%bc%80%e5%8f%91" class="header-mark"></a>CAN FD 开发</h2><p>2011 年初，通用汽车和博世开始着手开发一些有关提高吞吐量的 CAN 协议。当将越来越多的软件包
+下载到电子控制单元（ECU）时，汽车行业尤其受苦。高性能通信系统必须缩短这项耗时的任务。通过
+引入第二个比特率来提高 CAN 传输速度的想法并不新鲜。自 2000 年初以来，已有几位学者发表了
+研究方法。但是，没有一个研究者能够说服汽车制造商。博世与其他 CAN 专家合作，预先开发了
+CAN FD 规范，该规范于 2012 年在德国哈姆巴赫城堡举行的第 13 届国际 CAN 会议上正式推出。</p>
+<p>在 ISO 的标准化过程中，发现了所提出的错误检测机制中的一些学术缺陷。这需要对 CAN FD 协议
+进行审查，并引入其他防护措施（例如，填充位计数器）。这就是为什么存在非 ISO CAN FD 协议的
+原因，该协议与 ISO 11898-1 中标准化的 ISO CAN FD 协议不兼容。</p>
+<p>戴姆勒公司的 Mark Schreiner 博士为设计 CAN FD 网络提供了很多提示和知识。他的许多想法都
+包含在 CAN FD 节点的 CiA 601 系列以及系统设计建议和规范中。</p>
+<figure><img src="/ox-hugo/2023-10-20_01-08-50_003014dbbhmm1murgq4jz1.png"/>
+</figure>
+
+<h2 id="can-的未来是光明的" class="headerLink">
+    <a href="#can-%e7%9a%84%e6%9c%aa%e6%9d%a5%e6%98%af%e5%85%89%e6%98%8e%e7%9a%84" class="header-mark"></a>CAN 的未来是光明的</h2><p>随着 CAN FD 协议的引入，CAN 技术的寿命得以延长。汽车行业已经开始为下一代车载网络采用 CAN FD
+协议。可以预期，所有未来的应用程序都将使用 CAN FD 协议。不管它们是否需要更高的带宽都没关系。
+您仍然可以将 CAN FD 与单个位定时设置一起使用。有效负载长度无论如何都可以在 0 到 64 字节之间配置。</p>
+<p>对于那些需要更多带宽并需要混合拓扑的用户，CiA 已开发了所谓的 SIC（信号改善电路）收发器规范
+（CiA 601-4）。最初的想法来自日本 Tier-1 供应商 Denso。</p>
+<p>CiA 还开发了基于 CAN FD 下层的 CANopen FD 协议。特别是对于工业运动控制应用，非常适合更高
+的传输速率和更长的有效载荷（最大 64 字节）。CiA 还参与了使用 SAE J1939 系列中指定的现有
+参数组的商用车，基于 CAN FD 的应用层的开发。</p>
+<h2 id="第三代-can" class="headerLink">
+    <a href="#%e7%ac%ac%e4%b8%89%e4%bb%a3-can" class="header-mark"></a>第三代 CAN</h2><p>2018 年底，CiA 开始开发第三代基于 CAN 的数据链路层协议 CAN XL。它是应大众汽车的要求启动的。
+Carsten Schanze 和 Alexander Mueller 提供了许多最初的想法。</p>
+<p>2020 年由于疫情，取消了国际 CAN 会议的执行，今年的国际 CAN 会议改为线上举行，主题是 CAN XL。
+CAN XL 速度提升至 10Mbps。</p>
+<figure><img src="/ox-hugo/2023-10-20_01-09-14_232816gja692zjtsw62gjk.png"/>
+</figure>
+
+<p>同时保持 CAN 协议的优势以及与 CAN 和 CAN FD 的兼容性。下面是 CAN FD 和 CAN XL 的混合网络：</p>
+<figure><img src="/ox-hugo/2023-10-20_01-09-34_234304k425o15kd4pd5zqi.jpg"/>
+</figure>
+
+<p>补充：</p>
+<ol>
+<li>CiA CAN XL 规范于 2018 年 12 月开始，目标是在 2019 年底之前拥有 OSI 第 2 层规范
+（称为 CAN XL 协议），第二步，将开始进行 ISO 标 准化。</li>
+<li>经典 CAN 是 1Mbps，CAN FD 最高 2Mbps，CAN FD-SiC 是 5-8Mbps，CAN XL 是 10Mbps。</li>
+</ol>
+</div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-17</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/can/">CAN</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" class="prev" rel="prev" title="C&#43;&#43;函数式编程"><i class="fas fa-angle-left fa-fw"></i>C&#43;&#43;函数式编程</a>
+            <a href="/posts/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" class="next" rel="next" title="CAN 收发执行和错误处理">CAN 收发执行和错误处理<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>

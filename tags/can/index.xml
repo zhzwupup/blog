@@ -1,0 +1,28 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>CAN - 标签 - Zhao&#39;s blog</title>
+        <link>http://localhost:1313/tags/can/</link>
+        <description>CAN - 标签 - Zhao&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Fri, 20 Oct 2023 05:10:00 &#43;0800</lastBuildDate><atom:link href="http://localhost:1313/tags/can/" rel="self" type="application/rss+xml" /><item>
+    <title>CAN knowledge</title>
+    <link>http://localhost:1313/posts/can-knowledge/</link>
+    <pubDate>Fri, 20 Oct 2023 05:10:00 &#43;0800</pubDate><author>
+        <name>Zhao</name>
+    </author><guid>http://localhost:1313/posts/can-knowledge/</guid>
+    <description><![CDATA[CAN knowledge CAN: From physical layer to application layer and beyond Figure 1: In general, CAN-based communication is described by means of the 7-layer OSI model The CAN knowledge pages provide technical information on all three CAN (Controller Area Network) data link layer generations: Classical CAN CAN FD CAN XL CAN FD Light The CAN knowledge pages also describes several CAN physical layer options. Additionally, these pages also contain technical]]></description>
+</item><item>
+    <title>CAN 收发执行和错误处理</title>
+    <link>http://localhost:1313/posts/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/</link>
+    <pubDate>Fri, 20 Oct 2023 03:46:00 &#43;0800</pubDate><author>
+        <name>Zhao</name>
+    </author><guid>http://localhost:1313/posts/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/</guid>
+    <description><![CDATA[BSP视频教程第25期：CAN/CANFD/CANopen专题，CAN知识点干货分享, 收发执行过程和错误帧处理（2023-01-03） 参考资]]></description>
+</item><item>
+    <title>CAN 总线的前世今生</title>
+    <link>http://localhost:1313/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/</link>
+    <pubDate>Fri, 20 Oct 2023 03:04:00 &#43;0800</pubDate><author>
+        <name>Zhao</name>
+    </author><guid>http://localhost:1313/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/</guid>
+    <description><![CDATA[CAN总线35周年特别篇 &ndash; CAN总线的前世今生 本文整理翻译自 CAN in Automation（CiA），通过这个帖子大家会对当前市场上各种 CAN 名词有个]]></description>
+</item></channel>
+</rss>

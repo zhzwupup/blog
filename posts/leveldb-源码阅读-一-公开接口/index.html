@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>LevelDB 源码阅读 一：公开接口 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="LevelDB 源码阅读 一：公开接口" />
+<meta property="og:description" content="LevelDB 作为库，对外公开的接口是 include/leveldb/*.h 。 1 2 cd $leveldb ls include/leveldb 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 cache.h c.h comparator.h db.h dumpfile.h env.h export.h filter_policy.h iterator.h options.h slice.h status.h table_builder.h table.h write_batch.h db.h，操作 DB 的主要接口 option" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-01-17T00:00:00+08:00" />
+<meta property="article:modified_time" content="2024-01-17T19:20:43+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="LevelDB 源码阅读 一：公开接口"/>
+<meta name="twitter:description" content="LevelDB 作为库，对外公开的接口是 include/leveldb/*.h 。 1 2 cd $leveldb ls include/leveldb 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 cache.h c.h comparator.h db.h dumpfile.h env.h export.h filter_policy.h iterator.h options.h slice.h status.h table_builder.h table.h write_batch.h db.h，操作 DB 的主要接口 option"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3/" /><link rel="prev" href="http://localhost:1313/posts/%E4%BD%BF%E7%94%A8-qemu-%E5%92%8C-gdb-%E8%B0%83%E8%AF%95-linux-%E5%86%85%E6%A0%B8/" /><link rel="next" href="http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "LevelDB 源码阅读 一：公开接口",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3\/"
+        },"genre": "posts","keywords": "LevelDB","wordcount":  728 ,
+        "url": "http:\/\/localhost:1313\/posts\/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3\/","datePublished": "2024-01-17T00:00:00+08:00","dateModified": "2024-01-17T19:20:43+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents"></nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">LevelDB 源码阅读 一：公开接口</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-01-17">2024-01-17</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-17">2024-01-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 728 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 2 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><p>LevelDB 作为库，对外公开的接口是 <code>include/leveldb/*.h</code> 。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">cd</span> <span class="nv">$leveldb</span>
+</span></span><span class="line"><span class="cl">ls include/leveldb
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">cache.h
+</span></span><span class="line"><span class="cl">c.h
+</span></span><span class="line"><span class="cl">comparator.h
+</span></span><span class="line"><span class="cl">db.h
+</span></span><span class="line"><span class="cl">dumpfile.h
+</span></span><span class="line"><span class="cl">env.h
+</span></span><span class="line"><span class="cl">export.h
+</span></span><span class="line"><span class="cl">filter_policy.h
+</span></span><span class="line"><span class="cl">iterator.h
+</span></span><span class="line"><span class="cl">options.h
+</span></span><span class="line"><span class="cl">slice.h
+</span></span><span class="line"><span class="cl">status.h
+</span></span><span class="line"><span class="cl">table_builder.h
+</span></span><span class="line"><span class="cl">table.h
+</span></span><span class="line"><span class="cl">write_batch.h
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>db.h，操作 DB 的主要接口</li>
+<li>options.h，控制整个数据库的行为，也控制单个读写的行为。</li>
+<li>comparator.h，对用户指定的比较函数的抽象。如果只想按字节比较 Key，可以使用默认的 comparator，但是如果客户想要自定义排序（例如，处理不同的字符编码等），可以编写自己的 comaprator 实现。</li>
+<li>iterator.h，用于迭代数据的接口。可以从一个 DB 对象得到一个迭代器。</li>
+<li>wirte_batch.h，用于将多个 update 原子性地应用到数据库的接口。</li>
+<li>slice.h，用于维护指向字节数组的指针和长度的简单模块。</li>
+<li>status.h，Status 从许多公共接口返回，用于报告成功和各种错误。</li>
+<li>env.h，定义操作系统相关的功能，如读写文件。这个接口的 posix 实现是 util/env_posix.cc。</li>
+<li>table.h, table_builder.h，大多数 client 可能不会直接用到的底层模块。</li>
+</ul>
+<p>include/leveldb 中的其他头文件</p>
+<ul>
+<li>c.h，LevelDB 的 C 语言 binding</li>
+<li>cache.h，缓存策略接口，可以继承 Cache 实现自己的缓存策略。已内置 LRU 策略。</li>
+<li>dumpfile.h，只声明一个函数。</li>
+<li>export.h，WIN32 平台相关。</li>
+<li>filter_policy.h，可以继承 FilterPolicy 实现自己的过滤策略。已内置 bloom filter。</li>
+</ul>
+<p><strong>Cache</strong>
+数据库的内容被存储在文件系统上的一组文件上，每个文件存储了压缩的 block 序列。如果 <code>options.block_cache</code> 不为 NULL， <code>block_cache</code> 会被用来缓存常用的未压缩的 block 内容。</p>
+<p><strong>Filter</strong>
+数据库的数据被组织存放在磁盘上，一个 <code>Get()</code> 调用可能会涉及到对磁盘的多次读。可选的 FilterPolicy 机制可以大幅降低对硬盘的读次数。</p>
+<p><strong>Bloom Filter</strong>
+用于检查一个元素是否在集合中。布隆过滤器判断不存在则一定不存在，判断存在却可能不存在。</p>
+<p>Put 操作</p>
+<figure><img src="/ox-hugo/leveldb_put_call.png"/>
+</figure>
+
+</div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-17</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/leveldb/">LevelDB</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/%E4%BD%BF%E7%94%A8-qemu-%E5%92%8C-gdb-%E8%B0%83%E8%AF%95-linux-%E5%86%85%E6%A0%B8/" class="prev" rel="prev" title="使用 QEMU 和 GDB 调试 Linux 内核"><i class="fas fa-angle-left fa-fw"></i>使用 QEMU 和 GDB 调试 Linux 内核</a>
+            <a href="/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6/" class="next" rel="next" title="LevelDB 源码阅读 零">LevelDB 源码阅读 零<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>

@@ -1,0 +1,1614 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>操作系统 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="操作系统" />
+<meta property="og:description" content="CPU 虚拟化 (chap 4) 进程 进程的机器状态： 内存 &#43; 寄存器 进程 Api 创建 fork 销毁 等待 其他控制（暂停、恢复等） 状态（获取进程状态信息） 进程创建的细节 操作系统从磁盘" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-10-19T10:28:00+08:00" />
+<meta property="article:modified_time" content="2024-01-17T19:20:34+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="操作系统"/>
+<meta name="twitter:description" content="CPU 虚拟化 (chap 4) 进程 进程的机器状态： 内存 &#43; 寄存器 进程 Api 创建 fork 销毁 等待 其他控制（暂停、恢复等） 状态（获取进程状态信息） 进程创建的细节 操作系统从磁盘"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" /><link rel="next" href="http://localhost:1313/posts/python-%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "操作系统",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F\/"
+        },"genre": "posts","wordcount":  8339 ,
+        "url": "http:\/\/localhost:1313\/posts\/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F\/","datePublished": "2023-10-19T10:28:00+08:00","dateModified": "2024-01-17T19:20:34+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#cpu-虚拟化">CPU 虚拟化</a>
+          <ul>
+            <li><a href="#chap-4--进程">(chap 4) 进程</a></li>
+            <li><a href="#chap-6--cpu-虚拟化的底层机制-运行进程">(chap 6) CPU 虚拟化的底层机制（运行进程）</a></li>
+            <li><a href="#chap-7-9--进程调度">(chap 7-9) 进程调度</a></li>
+          </ul>
+        </li>
+        <li><a href="#内存虚拟化">内存虚拟化</a>
+          <ul>
+            <li><a href="#chap-13--地址空间">(chap 13) 地址空间</a></li>
+            <li><a href="#chap-14--内存操作-api">(chap 14) 内存操作 Api</a></li>
+            <li><a href="#chap-15--内存虚拟化的机制-地址转换">(chap 15) 内存虚拟化的机制：地址转换</a></li>
+            <li><a href="#chap-16--分段">(chap 16) 分段</a></li>
+            <li><a href="#chap-17--空闲空间管理">(chap 17) 空闲空间管理</a></li>
+            <li><a href="#chap-18--分页-介绍">(chap 18) 分页：介绍</a></li>
+            <li><a href="#chap-19--分页-快速地址转换-tlb">(chap 19) 分页：快速地址转换（TLB）</a></li>
+            <li><a href="#chap-21--超越物理内存">(chap 21) 超越物理内存</a></li>
+            <li><a href="#chap-22--超越物理内存-策略">(chap 22) 超越物理内存：策略</a></li>
+          </ul>
+        </li>
+        <li><a href="#并发">并发</a>
+          <ul>
+            <li><a href="#chap-26--并发-介绍">(chap 26) 并发：介绍</a></li>
+            <li><a href="#chap-27--线程-api">(chap 27) 线程 API</a></li>
+            <li><a href="#chap-28--锁">(chap 28) 锁</a></li>
+            <li><a href="#chap-29--基于锁的并发数据结构">(chap 29) 基于锁的并发数据结构</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">操作系统</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"><i class="far fa-folder fa-fw"></i>操作系统</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-10-19">2023-10-19</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-17">2024-01-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 8339 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 17 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#cpu-虚拟化">CPU 虚拟化</a>
+          <ul>
+            <li><a href="#chap-4--进程">(chap 4) 进程</a></li>
+            <li><a href="#chap-6--cpu-虚拟化的底层机制-运行进程">(chap 6) CPU 虚拟化的底层机制（运行进程）</a></li>
+            <li><a href="#chap-7-9--进程调度">(chap 7-9) 进程调度</a></li>
+          </ul>
+        </li>
+        <li><a href="#内存虚拟化">内存虚拟化</a>
+          <ul>
+            <li><a href="#chap-13--地址空间">(chap 13) 地址空间</a></li>
+            <li><a href="#chap-14--内存操作-api">(chap 14) 内存操作 Api</a></li>
+            <li><a href="#chap-15--内存虚拟化的机制-地址转换">(chap 15) 内存虚拟化的机制：地址转换</a></li>
+            <li><a href="#chap-16--分段">(chap 16) 分段</a></li>
+            <li><a href="#chap-17--空闲空间管理">(chap 17) 空闲空间管理</a></li>
+            <li><a href="#chap-18--分页-介绍">(chap 18) 分页：介绍</a></li>
+            <li><a href="#chap-19--分页-快速地址转换-tlb">(chap 19) 分页：快速地址转换（TLB）</a></li>
+            <li><a href="#chap-21--超越物理内存">(chap 21) 超越物理内存</a></li>
+            <li><a href="#chap-22--超越物理内存-策略">(chap 22) 超越物理内存：策略</a></li>
+          </ul>
+        </li>
+        <li><a href="#并发">并发</a>
+          <ul>
+            <li><a href="#chap-26--并发-介绍">(chap 26) 并发：介绍</a></li>
+            <li><a href="#chap-27--线程-api">(chap 27) 线程 API</a></li>
+            <li><a href="#chap-28--锁">(chap 28) 锁</a></li>
+            <li><a href="#chap-29--基于锁的并发数据结构">(chap 29) 基于锁的并发数据结构</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="cpu-虚拟化" class="headerLink">
+    <a href="#cpu-%e8%99%9a%e6%8b%9f%e5%8c%96" class="header-mark"></a>CPU 虚拟化</h2><h3 id="chap-4--进程" class="headerLink">
+    <a href="#chap-4--%e8%bf%9b%e7%a8%8b" class="header-mark"></a>(chap 4) 进程</h3><h4 id="进程的机器状态-内存-plus-寄存器" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e7%9a%84%e6%9c%ba%e5%99%a8%e7%8a%b6%e6%80%81-%e5%86%85%e5%ad%98-plus-%e5%af%84%e5%ad%98%e5%99%a8" class="header-mark"></a>进程的机器状态： 内存 + 寄存器</h4><h4 id="进程-api" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b-api" class="header-mark"></a>进程 Api</h4><table>
+<thead>
+<tr>
+<th>创建</th>
+<th>fork</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>销毁</td>
+<td></td>
+</tr>
+<tr>
+<td>等待</td>
+<td></td>
+</tr>
+<tr>
+<td>其他控制（暂停、恢复等）</td>
+<td></td>
+</tr>
+<tr>
+<td>状态（获取进程状态信息）</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="进程创建的细节" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e5%88%9b%e5%bb%ba%e7%9a%84%e7%bb%86%e8%8a%82" class="header-mark"></a>进程创建的细节</h4><ul>
+<li>操作系统从磁盘读取程序的字节，将代码和所有静态数据（例如初始化变量）加载到内存中，加载到进程
+的地址空间中。</li>
+<li>操作系统为程序的运行时栈（run-time stack 或 stack)分配内存。C 程序使用栈存放局部变量、函数参数和返回地址。</li>
+<li>操作系统可能为程序的堆（heap）分配一些内存。</li>
+<li>操作系统还将执行一些其他初始化任务，特别是与输入/输出相关的任务。例如，在 UNIX 系统下，默认每个进程都有 3 个打开的文件描述符。</li>
+</ul>
+<h4 id="进程状态" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e7%8a%b6%e6%80%81" class="header-mark"></a>进程状态</h4><figure><img src="/ox-hugo/process_state.png"/>
+</figure>
+
+<h4 id="进程的数据结构" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e7%9a%84%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84" class="header-mark"></a>进程的数据结构</h4><p>操作系统使用这个数据结构来跟踪各种相关的信息。</p>
+<p>以 xv6 操作系统为例。</p>
+<p>对于停止的进程，寄存器上下文保存其寄存器的内容。当一个进程停止时，它的寄存器将被保存到这个内存位置。通过恢复这些寄存器（将它们的值放回实际的物理寄存器中），操作系统可以恢复运行该进程。（这种技术叫“上下文切换”）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Saved registers for kernel context switches.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">context</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">ra</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">sp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// callee-saved
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">uint64</span> <span class="n">s0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s4</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s6</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s8</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s9</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">uint64</span> <span class="n">s11</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">procstate</span> <span class="p">{</span> <span class="n">UNUSED</span><span class="p">,</span> <span class="n">USED</span><span class="p">,</span> <span class="n">SLEEPING</span><span class="p">,</span> <span class="n">RUNNABLE</span><span class="p">,</span> <span class="n">RUNNING</span><span class="p">,</span> <span class="n">ZOMBIE</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Per-process state
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">proc</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">struct</span> <span class="n">spinlock</span> <span class="n">lock</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// p-&gt;lock must be held when using these:
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">enum</span> <span class="n">procstate</span> <span class="n">state</span><span class="p">;</span>        <span class="c1">// Process state
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">void</span> <span class="o">*</span><span class="n">chan</span><span class="p">;</span>                  <span class="c1">// If non-zero, sleeping on chan
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">int</span> <span class="n">killed</span><span class="p">;</span>                  <span class="c1">// If non-zero, have been killed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">int</span> <span class="n">xstate</span><span class="p">;</span>                  <span class="c1">// Exit status to be returned to parent&#39;s wait
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">int</span> <span class="n">pid</span><span class="p">;</span>                     <span class="c1">// Process ID
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// wait_lock must be held when using this:
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">struct</span> <span class="n">proc</span> <span class="o">*</span><span class="n">parent</span><span class="p">;</span>         <span class="c1">// Parent process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// these are private to the process, so p-&gt;lock need not be held.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">uint64</span> <span class="n">kstack</span><span class="p">;</span>               <span class="c1">// Virtual address of kernel stack
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">uint64</span> <span class="n">sz</span><span class="p">;</span>                   <span class="c1">// Size of process memory (bytes)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">pagetable_t</span> <span class="n">pagetable</span><span class="p">;</span>       <span class="c1">// User page table
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">struct</span> <span class="n">trapframe</span> <span class="o">*</span><span class="n">trapframe</span><span class="p">;</span> <span class="c1">// data page for trampoline.S
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">struct</span> <span class="n">context</span> <span class="n">context</span><span class="p">;</span>      <span class="c1">// swtch() here to run process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">ofile</span><span class="p">[</span><span class="n">NOFILE</span><span class="p">];</span>  <span class="c1">// Open files
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="n">cwd</span><span class="p">;</span>           <span class="c1">// Current directory
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>               <span class="c1">// Process name (debugging)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="chap-6--cpu-虚拟化的底层机制-运行进程" class="headerLink">
+    <a href="#chap-6--cpu-%e8%99%9a%e6%8b%9f%e5%8c%96%e7%9a%84%e5%ba%95%e5%b1%82%e6%9c%ba%e5%88%b6-%e8%bf%90%e8%a1%8c%e8%bf%9b%e7%a8%8b" class="header-mark"></a>(chap 6) CPU 虚拟化的底层机制（运行进程）</h3><p>LDE 让程序运行的大部分指令直接访问硬件，只在一些关键点（发生时钟中断或进程发起系统调用）有操作系统介入来确保“在正确时间，正确的地点，做正确的事”。</p>
+<h4 id="进程如何运行" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e5%a6%82%e4%bd%95%e8%bf%90%e8%a1%8c" class="header-mark"></a>进程如何运行</h4><div class="table-caption">
+  <span class="table-number">Table 1:</span>
+  直接运行协议（无限制）
+</div>
+<table>
+<thead>
+<tr>
+<th>操作系统</th>
+<th>程序</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>在进程列表上创建条目</td>
+<td></td>
+</tr>
+<tr>
+<td>为程序分配内存</td>
+<td></td>
+</tr>
+<tr>
+<td>将程序加载到内存中</td>
+<td></td>
+</tr>
+<tr>
+<td>根据 argc/argv 设置程序栈</td>
+<td></td>
+</tr>
+<tr>
+<td>清除寄存器</td>
+<td></td>
+</tr>
+<tr>
+<td>执行 call main() 方法</td>
+<td></td>
+</tr>
+<tr>
+<td>清除寄存器</td>
+<td></td>
+</tr>
+<tr>
+<td>执行 call main() 方法</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>执行 main()</td>
+</tr>
+<tr>
+<td></td>
+<td>从 main 中执行 return</td>
+</tr>
+<tr>
+<td>释放进程的内存将进程从进程列表中清除</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="table-caption">
+  <span class="table-number">Table 2:</span>
+  受限直接运行协议(limited direct execution, LDE)
+</div>
+<table>
+<thead>
+<tr>
+<th><strong>操作系统@启动（内核模式）</strong></th>
+<th><strong>硬件</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始化陷阱表</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>记住系统调用处理程序的地址</td>
+<td></td>
+</tr>
+<tr>
+<td>操作系统@运行（内核模式）</td>
+<td>硬件</td>
+<td>程序（应用模式）</td>
+</tr>
+<tr>
+<td>在进程列表上创建条目</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>为程序分配内存</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>将程序加载到内存中</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>根据 argv 设置程序栈</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>用寄存器/程序计数器填充内核栈</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>从陷阱返回</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>从内核恢复寄存器</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>转向用户模式</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>跳到 main</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>运行 main</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>&hellip;&hellip;</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>调用系统调用</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>陷入操作系统</td>
+</tr>
+<tr>
+<td></td>
+<td>将寄存器保存到内核栈</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>转向内核模式</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>跳到陷阱处理程序</td>
+<td></td>
+</tr>
+<tr>
+<td>处理陷阱</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>做系统调用的工作</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>从陷阱返回</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>从内核栈恢复寄存器</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>转向用户模式</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>跳到陷阱之后的程序计数器</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>&hellip;&hellip;从 main 返回</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>陷入（通过 exit()）</td>
+</tr>
+<tr>
+<td>释放进程中的内存，将进程从进程列表中清除</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>LDE 协议的两个阶段</p>
+<ul>
+<li>系统引导时，内核初始化陷阱表，并且 CPU 记住它的位置以供随后使用。</li>
+<li>运行进程时，从陷阱返回开始执行进程之前内核设置了一些内容。这会将 CPU 切换到用户模式并开始运行该进程。当进程希望发出系统调用时，它会重新陷入操作系统，然后再次通过陷阱返回，将控制权换个进程。进程继续完成工作，并从 main() 返回。这通常会返回到一些存根代码，它将正确推出该程序（例如，通过 exit() 系统调用，这将陷入 OS 中）。此时，OS 清理干净，任务完成。</li>
+</ul>
+<h4 id="进程之间切换" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e4%b9%8b%e9%97%b4%e5%88%87%e6%8d%a2" class="header-mark"></a>进程之间切换</h4><blockquote>
+<p>如果一个进程在 CPU 上运行，操作系统如何采取行动？</p>
+<ul>
+<li>协作方式：等待进程发起系统调用，控制权回到操作系统。</li>
+<li>非协作方式：时钟中断。</li>
+</ul>
+</blockquote>
+<div class="table-caption">
+  <span class="table-number">Table 3:</span>
+  受限直接执行协议（时钟中断）
+</div>
+<table>
+<thead>
+<tr>
+<th><strong>操作系统@启动（内核模式）</strong></th>
+<th><strong>硬件</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始化陷阱表</td>
+<td>记住以下地址：（系统调用处理程序，时钟处理程序</td>
+<td></td>
+</tr>
+<tr>
+<td>启动中断时钟</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>启动时钟</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>每隔 x ms 中断 CPU</td>
+<td></td>
+</tr>
+<tr>
+<td>操作系统@运行（内核模式）</td>
+<td>硬件</td>
+<td>程序（应用模式）</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>进程 A &hellip;&hellip;</td>
+</tr>
+<tr>
+<td></td>
+<td>时钟中断</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>将寄存器（A）保存到内核栈（A）</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>转向内核模式</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>跳到陷阱处理程序</td>
+<td></td>
+</tr>
+<tr>
+<td>处理陷阱</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>调用 switch() 例程，将寄存器（A）保存到进程结构（A），将进程结构（B）恢复到寄存器（B）</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>从陷阱返回（进入 B）</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>从内核栈恢复寄存器（B）</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>转向用户模式</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>跳到 B 的程序计数器</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>进程 B&hellip;&hellip;</td>
+</tr>
+</tbody>
+</table>
+<p>两种类型的寄存器保存/恢复</p>
+<ul>
+<li>发生时钟中断时，运行进程的用户寄存器由硬件隐式保存，使用该进程的内核栈。</li>
+<li>操作系统决定从 A 切换到 B,内核寄存器被 软件（即 OS）明确地保存，但这次被存储在该进程的进程结构的内存中。这个操作让系统从好像刚刚由 A 陷入内核变成好像刚刚由 B 陷入内核。
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">      <span class="c1"># Context switch
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">#
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">#   void swtch(struct context *old, struct context *new);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">#
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1"># Save current registers in old. Load from new.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="na">.globl</span> <span class="no">swtch</span>
+</span></span><span class="line"><span class="cl">  <span class="nl">swtch:</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">ra</span><span class="p">,</span> <span class="mi">0</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">sp</span><span class="p">,</span> <span class="mi">8</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s0</span><span class="p">,</span> <span class="mi">16</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s1</span><span class="p">,</span> <span class="mi">24</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s2</span><span class="p">,</span> <span class="mi">32</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s3</span><span class="p">,</span> <span class="mi">40</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s4</span><span class="p">,</span> <span class="mi">48</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s5</span><span class="p">,</span> <span class="mi">56</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s6</span><span class="p">,</span> <span class="mi">64</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s7</span><span class="p">,</span> <span class="mi">72</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s8</span><span class="p">,</span> <span class="mi">80</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s9</span><span class="p">,</span> <span class="mi">88</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s10</span><span class="p">,</span> <span class="mi">96</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">sd</span> <span class="no">s11</span><span class="p">,</span> <span class="mi">104</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">ra</span><span class="p">,</span> <span class="mi">0</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">sp</span><span class="p">,</span> <span class="mi">8</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s0</span><span class="p">,</span> <span class="mi">16</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s1</span><span class="p">,</span> <span class="mi">24</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s2</span><span class="p">,</span> <span class="mi">32</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s3</span><span class="p">,</span> <span class="mi">40</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s4</span><span class="p">,</span> <span class="mi">48</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s5</span><span class="p">,</span> <span class="mi">56</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s6</span><span class="p">,</span> <span class="mi">64</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s7</span><span class="p">,</span> <span class="mi">72</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s8</span><span class="p">,</span> <span class="mi">80</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s9</span><span class="p">,</span> <span class="mi">88</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s10</span><span class="p">,</span> <span class="mi">96</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">          <span class="nf">ld</span> <span class="no">s11</span><span class="p">,</span> <span class="mi">104</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">          <span class="nf">ret</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="src-block-caption">
+  <span class="src-block-number">Code Snippet 1:</span>
+  xv6-riscv 的上下文切换代码
+</div>
+</li>
+</ul>
+<h3 id="chap-7-9--进程调度" class="headerLink">
+    <a href="#chap-7-9--%e8%bf%9b%e7%a8%8b%e8%b0%83%e5%ba%a6" class="header-mark"></a>(chap 7-9) 进程调度</h3><h4 id="调度指标" class="headerLink">
+    <a href="#%e8%b0%83%e5%ba%a6%e6%8c%87%e6%a0%87" class="header-mark"></a>调度指标</h4><p>周转时间：
+\[T_{周转时间} = T_{完成时间} - T_{到达时间}\]</p>
+<p>响应时间：
+\[T_{响应时间} = T_{首次运行} - T_{到达时间}\]</p>
+<h4 id="调度算法" class="headerLink">
+    <a href="#%e8%b0%83%e5%ba%a6%e7%ae%97%e6%b3%95" class="header-mark"></a>调度算法</h4><ul>
+<li>先进先出（FIFO）</li>
+<li>最短任务优先（SJF）</li>
+<li>最短完成时间优先（STCF）</li>
+<li>轮转（Round-Robin）</li>
+<li><strong>多级反馈队列（MLFQ）</strong></li>
+<li>比例份额调度（彩票调度，步长调度）</li>
+</ul>
+<h2 id="内存虚拟化" class="headerLink">
+    <a href="#%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96" class="header-mark"></a>内存虚拟化</h2><h3 id="chap-13--地址空间" class="headerLink">
+    <a href="#chap-13--%e5%9c%b0%e5%9d%80%e7%a9%ba%e9%97%b4" class="header-mark"></a>(chap 13) 地址空间</h3><p>一个进程的地址空间包含运行的程序的所有内存状态：</p>
+<ul>
+<li>程序的代码</li>
+<li>栈保存当前的函数调用信息，分配空间给局部变量，传递参数和函数返回值。</li>
+<li>堆用于管理了动态分配的、用户管理的内存。</li>
+</ul>
+<!--listend-->
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;location of code : %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">main</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;location of heap : %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="nf">malloc</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;location of stack : %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到，代码在地址空间开头，然后是堆，栈在这个 大型虚拟地址空间的另一端。</p>
+<h3 id="chap-14--内存操作-api" class="headerLink">
+    <a href="#chap-14--%e5%86%85%e5%ad%98%e6%93%8d%e4%bd%9c-api" class="header-mark"></a>(chap 14) 内存操作 Api</h3><dl>
+<dt>栈内存</dt>
+<dd>栈内存的申请和释放操作是编译器隐式管理的。
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl">         <span class="kt">void</span> <span class="nf">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">             <span class="kt">int</span> <span class="n">x</span><span class="p">;</span> <span class="c1">// declares an integer on the stack
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>             <span class="p">...</span>
+</span></span><span class="line"><span class="cl">         <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>编译器确保在进入 <code>func()</code> 函数的时候，在栈上开辟空间。从函数退出时，编译器释放内存。</p>
+</dd>
+<dt>堆内存</dt>
+<dd>申请和释放由程序员显式的完成。
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl">         <span class="kt">void</span> <span class="nf">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">             <span class="kt">int</span> <span class="o">*</span><span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span> <span class="nf">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">             <span class="p">...</span>
+</span></span><span class="line"><span class="cl">         <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></dd>
+</dl>
+<p><strong>栈和堆的分配都发生在这一行：</strong> 编译器看到指针声明 <code>int *x</code> 时，知道为一个整型指针分配空间，随后，当程序调用 <code>malloc()</code> 时，它会在堆上请求整数的空间，函数返回这样一个整数的地址（失败时则返回 NULL），然后将这个地址遁出在栈上以供程序使用。</p>
+<h4 id="malloc-调用" class="headerLink">
+    <a href="#malloc-%e8%b0%83%e7%94%a8" class="header-mark"></a>malloc() 调用</h4><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="o">*</span><span class="n">x</span> <span class="o">=</span> <span class="nf">malloc</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>  <span class="c1">// 输出指针的空间长度
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">y</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">y</span><span class="p">));</span>  <span class="c1">// 输出数组的空间长度
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="chap-15--内存虚拟化的机制-地址转换" class="headerLink">
+    <a href="#chap-15--%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96%e7%9a%84%e6%9c%ba%e5%88%b6-%e5%9c%b0%e5%9d%80%e8%bd%ac%e6%8d%a2" class="header-mark"></a>(chap 15) 内存虚拟化的机制：地址转换</h3><dl>
+<dt>地址转换</dt>
+<dd><strong>硬件</strong> 对每次内存访问进行处理（即指令获取、数据读取或写入），将指令中的虚拟地址转换为数据实际存储的物理地址。 <strong>操作系统</strong> 管理内存，记录被占用和空闲的内存位置。</dd>
+</dl>
+<h4 id="动态-基于硬件-重定位" class="headerLink">
+    <a href="#%e5%8a%a8%e6%80%81-%e5%9f%ba%e4%ba%8e%e7%a1%ac%e4%bb%b6-%e9%87%8d%e5%ae%9a%e4%bd%8d" class="header-mark"></a>动态（基于硬件）重定位</h4><p>每个 CPU 需要两个硬件寄存器，基址（base）寄存器和界限（bound）寄存器。让我们可以将地址空间放在物理内存 的任何位置，同时又能确保进程只能访问自己的地址空间。</p>
+<div class="table-caption">
+  <span class="table-number">Table 4:</span>
+  动态重定位：硬件要求
+</div>
+<table>
+<thead>
+<tr>
+<th>硬件要求</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>特权模式</td>
+<td>需要，以防用户模式的进程执行特权操作</td>
+</tr>
+<tr>
+<td>基址/界限寄存器</td>
+<td>每个 CPU 需要一对寄存器来支持地址转换和界限检查</td>
+</tr>
+<tr>
+<td>能够转换虚拟地址并检查它是否越界</td>
+<td>电路来完成转换和检查界限，在这种情况下，非常简单</td>
+</tr>
+<tr>
+<td>修改基址/界限寄存器的特权指令</td>
+<td>在让用户程序运行之前，操作系统必须能够设置这些值</td>
+</tr>
+<tr>
+<td>注册一场处理程序的特权指令</td>
+<td>操作系统必须能告诉硬件，如果异常发生，那么执行哪些代码</td>
+</tr>
+<tr>
+<td>能够出发异常</td>
+<td>如果进程试图使用特权指令或越界的内存</td>
+</tr>
+</tbody>
+</table>
+<div class="table-caption">
+  <span class="table-number">Table 5:</span>
+  动态重定位：操作系统的职责
+</div>
+<table>
+<thead>
+<tr>
+<th>操作系统的要求</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>内存管理</td>
+<td>需要为新进程分配内存</td>
+</tr>
+<tr>
+<td></td>
+<td>从终止的进程回收内存</td>
+</tr>
+<tr>
+<td></td>
+<td>一般通过空闲列表（free list）来管理内存</td>
+</tr>
+<tr>
+<td>基址/界限管理</td>
+<td>必须在上下文切换时正确设置基址/界限寄存器</td>
+</tr>
+<tr>
+<td>异常处理</td>
+<td>当异常发生时执行的代码，可能的动作是终止犯错的进程</td>
+</tr>
+</tbody>
+</table>
+<h3 id="chap-16--分段" class="headerLink">
+    <a href="#chap-16--%e5%88%86%e6%ae%b5" class="header-mark"></a>(chap 16) 分段</h3><blockquote>
+<p>前面假设将整个地址空间放入物理内存，那么栈和堆之间的空间并没有被进程使用，却依然占用了实际的物理内存。因此，简单的通过基址寄存器和界限寄存器实现的虚拟内存很浪费。</p>
+</blockquote>
+<h4 id="分段-泛化的基址-界限" class="headerLink">
+    <a href="#%e5%88%86%e6%ae%b5-%e6%b3%9b%e5%8c%96%e7%9a%84%e5%9f%ba%e5%9d%80-%e7%95%8c%e9%99%90" class="header-mark"></a>分段：泛化的基址/界限</h4><p>在 MMU 中引入不知一个基址和界限寄存器对，给地址空间内的每个 <strong>逻辑段（segment）</strong> 一对。</p>
+<h4 id="引用了哪个段" class="headerLink">
+    <a href="#%e5%bc%95%e7%94%a8%e4%ba%86%e5%93%aa%e4%b8%aa%e6%ae%b5" class="header-mark"></a>引用了哪个段？</h4><ul>
+<li>显式方式，虚拟地址开头几位标识不同的段，剩余位表示段内偏移</li>
+<li>隐式方式，硬件通过地址产生的方式来确定段。例如，地址由程序计数器产生（即它是指令获取），那么地址在代码段。如果基于栈或基栈指针，它一定在栈段。其他地址则在堆段。</li>
+</ul>
+<h4 id="支持共享" class="headerLink">
+    <a href="#%e6%94%af%e6%8c%81%e5%85%b1%e4%ba%ab" class="header-mark"></a>支持共享</h4><p>在地址空间之间共享某些内存段。为了支持共享，需要一些额外的硬件支持，这就是保护位。为每个段增加了几个位，标识程序是否能够读写该段，或执行其中的代码。通过将代码段标记为只读，同样的代码可以被多个进程共享，物理内存中的一个段可以映射到多个虚拟地址空间。</p>
+<h3 id="chap-17--空闲空间管理" class="headerLink">
+    <a href="#chap-17--%e7%a9%ba%e9%97%b2%e7%a9%ba%e9%97%b4%e7%ae%a1%e7%90%86" class="header-mark"></a>(chap 17) 空闲空间管理</h3><h4 id="追踪已分配空间的大小" class="headerLink">
+    <a href="#%e8%bf%bd%e8%b8%aa%e5%b7%b2%e5%88%86%e9%85%8d%e7%a9%ba%e9%97%b4%e7%9a%84%e5%a4%a7%e5%b0%8f" class="header-mark"></a>追踪已分配空间的大小</h4><p><code>free(void *ptr)</code> 接口没有块大小的参数。大多数分配程序会在头块（header）中保存一点额外的信息，它在内存中，通常就在返回的内存块之前。该头块中至少包含所分配空间的大小，也可能包含一些额外的指针来加速空间释放，包含一个幻数来提供完整性检查，以及其他信息。假定，一个简单的头块包含了分配空间的大小和一个幻数：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">typedef struct header_t  (
+</span></span><span class="line"><span class="cl">    int size;
+</span></span><span class="line"><span class="cl">    int magic;
+</span></span><span class="line"><span class="cl">) header_t;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">// 例如 header_t{20, 1234567}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>用户调用 <code>free(ptr)</code> 时，库会通过简单的指针运算得到头块的位置：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">void free(void *ptr) {
+</span></span><span class="line"><span class="cl">    header_t *hptr = (void*)ptr - sizeof(header_t);
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>获得头块的指针后，库可以很容易的确定幻数是否符合预期的值，作为正常性检查 <code>assert(hptr-&gt;magic =</code> 123456)=，并简单计算要释放的空间的大小（即头块的大小加区域长度）。</p>
+<h3 id="chap-18--分页-介绍" class="headerLink">
+    <a href="#chap-18--%e5%88%86%e9%a1%b5-%e4%bb%8b%e7%bb%8d" class="header-mark"></a>(chap 18) 分页：介绍</h3><ul>
+<li>分段，将空间切成不同长度的分片，空间本身会碎片化。</li>
+<li>分页，将空间分割成固定长度的分片。</li>
+</ul>
+<h4 id="页表" class="headerLink">
+    <a href="#%e9%a1%b5%e8%a1%a8" class="header-mark"></a>页表</h4><p>是一种数据结构，用于将虚拟地址（虚拟页号）映射到物理地址（物理帧号）。最简单的形式为线性页表。</p>
+<p>每个进程都有一个页表。</p>
+<p>每个页表项（PTE）的内容：</p>
+<ul>
+<li>有效位
+通常用于指示特定地址转换是否有效。例如，当一个程序开始运行时，它的代码和堆在其地址空间的一端，栈在另一端。所有未使用的中间空间都将被标记为无效（invalid），如果进程尝试访问这种内存，就会陷入操作系统。有效为对支持稀疏地址空间只管重要。</li>
+<li>可能有保护位
+表明页是否可以读取、写入或执行。以不允许的方式访问页，会陷入操作系统。</li>
+<li>存在位
+该页在物理存储器还是磁盘上。</li>
+<li>脏位
+页面被带入内存后是否被修改过。</li>
+<li>参考位（访问位）
+有时用于追踪页是否被访问，也用于确定哪些页很受欢迎，因此应该保留在内存中。</li>
+</ul>
+<h4 id="内存追踪" class="headerLink">
+    <a href="#%e5%86%85%e5%ad%98%e8%bf%bd%e8%b8%aa" class="header-mark"></a>内存追踪</h4><h3 id="chap-19--分页-快速地址转换-tlb" class="headerLink">
+    <a href="#chap-19--%e5%88%86%e9%a1%b5-%e5%bf%ab%e9%80%9f%e5%9c%b0%e5%9d%80%e8%bd%ac%e6%8d%a2-tlb" class="header-mark"></a>(chap 19) 分页：快速地址转换（TLB）</h3><p>虚拟地址到物理地址的映射信息存储在物理内存中，所以转换虚拟地址时，分页逻辑上需要一次额外的内存访问，每次指令获取、显式加载或保存，都要额外读一次内存一得到转换信息，这很慢。</p>
+<p>帮助来自操作系统的老朋友：硬件。地址转换旁路缓冲存储器（translation-lookaside buffer, TLB），它就是频繁发生的虚拟到物理地址转换的硬件缓存。对每次内存访问，硬件显示检查 TLB,看其中是否有期望的转换映射，如果有，就很快完成转换，不用访问页表（其中有全部的转换映射）。</p>
+<h3 id="chap-21--超越物理内存" class="headerLink">
+    <a href="#chap-21--%e8%b6%85%e8%b6%8a%e7%89%a9%e7%90%86%e5%86%85%e5%ad%98" class="header-mark"></a>(chap 21) 超越物理内存</h3><h4 id="存在位" class="headerLink">
+    <a href="#%e5%ad%98%e5%9c%a8%e4%bd%8d" class="header-mark"></a>存在位</h4><p>正在运行的进程生成虚拟内存引用（用于获取指令或访问数据），在这种情况下，硬件将其转换为物理地址，再从内存中获取所需数据。</p>
+<p>硬件首先从虚拟地址获得 VPN，检查 TLB 是否匹配（TLB 命中），如果命中，则获得最终的物理地址并从内存中取回；如果找不到，则硬件在内存中查找页表（使用页表基址寄存器），并使用 VPN 查找该页的页表项（PTE）作为索引。如果页有效且存在于物理内存中，则硬件从 PTE 中获得 PFN,将其插入 TLB,并重试该指令，这次产生 TLB 命中。</p>
+<p>当硬件在 PTE 中查找时，通过页表项中的存在位判断页是否在内存中，如果存在为设为 0，则页不在内存中，而在硬盘上。访问不在物理内存中的页，这种行为通常被称为页错误（page fault）</p>
+<h4 id="页错误处理流程" class="headerLink">
+    <a href="#%e9%a1%b5%e9%94%99%e8%af%af%e5%a4%84%e7%90%86%e6%b5%81%e7%a8%8b" class="header-mark"></a>页错误处理流程</h4><ul>
+<li>页错误控制流算法（硬件）</li>
+</ul>
+<!--listend-->
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">VPN = (VirtualAddress &amp; VPN_MASK) &gt;&gt; SHIFT
+</span></span><span class="line"><span class="cl">(Success, TlbEntry) = TLB_Lookup(VPN)
+</span></span><span class="line"><span class="cl">if (Success == True)
+</span></span><span class="line"><span class="cl"> // TLB Hit
+</span></span><span class="line"><span class="cl">    if (CanAccess(TlbEntry.ProtectBits) == True)
+</span></span><span class="line"><span class="cl">        Offset = VirtualAddress &amp; OFFSET_MASK
+</span></span><span class="line"><span class="cl">        PhysAddr = (TlbEntry.PFN &lt;&lt; SHIFT) | Offset
+</span></span><span class="line"><span class="cl">        Register = AccessMemory(PhysAddr)
+</span></span><span class="line"><span class="cl">    else
+</span></span><span class="line"><span class="cl">        RaiseException(PROTECTION_FAULT)
+</span></span><span class="line"><span class="cl">else // TLB Miss
+</span></span><span class="line"><span class="cl">    PTEAddr = PTBR + (VPN * sizeof(PTE))
+</span></span><span class="line"><span class="cl">    PTE = AccessMemory(PTEAddr)
+</span></span><span class="line"><span class="cl">    if (PTE.Valid == False)
+</span></span><span class="line"><span class="cl">        RaiseException(SEGMENTATION_FAULT)
+</span></span><span class="line"><span class="cl">    else
+</span></span><span class="line"><span class="cl">        if (CanAccess(PTE.ProtectBits) == False)
+</span></span><span class="line"><span class="cl">            RaiseException(PROTECTION_FAULT)
+</span></span><span class="line"><span class="cl">        else if (PTE.Present == True)
+</span></span><span class="line"><span class="cl">            // assuming hardware-managed TLB
+</span></span><span class="line"><span class="cl">            TLB_Insert(VPN, PTE.PFN, PTE.ProtectBits)
+</span></span><span class="line"><span class="cl">            RetryInstruction()
+</span></span><span class="line"><span class="cl">        else if (PTE.Present == False)
+</span></span><span class="line"><span class="cl">            RaiseException(PAGE_FAULT)
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>页错误控制流算法（软件）</li>
+</ul>
+<!--listend-->
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">PFN = FindFreePhysicalPage()
+</span></span><span class="line"><span class="cl">if (PFN == -1) // no free page found
+</span></span><span class="line"><span class="cl">    PFN = EvictPage() // run replacement algorithm
+</span></span><span class="line"><span class="cl">DiskRead(PTE.DiskAddr, pfn) // sleep (waiting for I/O)
+</span></span><span class="line"><span class="cl">PTE.present = True // update page table with present
+</span></span><span class="line"><span class="cl">PTE.PFN = PFN // bit and translation (PFN)
+</span></span><span class="line"><span class="cl">RetryInstruction() // retry instruction
+</span></span></code></pre></td></tr></table>
+</div>
+</div><figure>
+<p>\begin{equation}
+T^2 = \frac{4\pi^2}{G(M_1+M_2)} R^3
+\end{equation}</p>
+</figure>
+<h3 id="chap-22--超越物理内存-策略" class="headerLink">
+    <a href="#chap-22--%e8%b6%85%e8%b6%8a%e7%89%a9%e7%90%86%e5%86%85%e5%ad%98-%e7%ad%96%e7%95%a5" class="header-mark"></a>(chap 22) 超越物理内存：策略</h3><h4 id="最少最近使用-least-recently-used-lru" class="headerLink">
+    <a href="#%e6%9c%80%e5%b0%91%e6%9c%80%e8%bf%91%e4%bd%bf%e7%94%a8-least-recently-used-lru" class="header-mark"></a>最少最近使用（Least-Recently-Used, LRU）</h4><h4 id="近似-lru" class="headerLink">
+    <a href="#%e8%bf%91%e4%bc%bc-lru" class="header-mark"></a>近似 LRU</h4><p>时钟算法 + 使用位</p>
+<h4 id="考虑脏页" class="headerLink">
+    <a href="#%e8%80%83%e8%99%91%e8%84%8f%e9%a1%b5" class="header-mark"></a>考虑脏页</h4><p>页面已被修改（变脏），提出张掖必须将它写入磁盘，这很昂贵。</p>
+<h4 id="其他虚拟内存策略" class="headerLink">
+    <a href="#%e5%85%b6%e4%bb%96%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98%e7%ad%96%e7%95%a5" class="header-mark"></a>其他虚拟内存策略</h4><dl>
+<dt>预取（prefecthing）</dt>
+<dd>提前载入</dd>
+<dt>聚集（clustering），分组（grouping）</dt>
+<dd>写入磁盘</dd>
+</dl>
+<h4 id="抖动-thrashing" class="headerLink">
+    <a href="#%e6%8a%96%e5%8a%a8-thrashing" class="header-mark"></a>抖动（thrashing）</h4><p>内存需求超出了可用物理内存，系统将不断地进行换页。</p>
+<h2 id="并发" class="headerLink">
+    <a href="#%e5%b9%b6%e5%8f%91" class="header-mark"></a>并发</h2><h3 id="chap-26--并发-介绍" class="headerLink">
+    <a href="#chap-26--%e5%b9%b6%e5%8f%91-%e4%bb%8b%e7%bb%8d" class="header-mark"></a>(chap 26) 并发：介绍</h3><blockquote>
+<p>每个线程类似于独立的进程，只有一点区别：它们共享地址空间，从而能够访问相同的数据。</p>
+<p>单个线程的状态与进程状态非常类似。线程有一个程序计数器（PC），记录程序从哪里获取指令。每个线程有自己的一组用于计算的寄存器。所以如果两个线程运行在一个处理器上，从运行一个线程（T1）切换到另一个线程（T2）时，必定发生上下文切换（context switch）。类似于进程间的上下文切换。对于进程，将状态保存到进程控制块（Process Control Block, PCB）；对于线程，使用一个或多个线程控制块（Thread Control Block, TCB）保存每个线程的状态。有一点主要区别：地址空间保持不变（即不需要切换当前使用的页表）</p>
+<p>多线程的进程中，每个线程都有一个栈。所有位于栈上的变量、参数/返回值和其他放在栈上的东西，将被放置在线程本地（thread-local）存储的地方。多个栈破换了地址空间布局的美感。</p>
+</blockquote>
+<h4 id="线程创建" class="headerLink">
+    <a href="#%e7%ba%bf%e7%a8%8b%e5%88%9b%e5%bb%ba" class="header-mark"></a>线程创建</h4><p>主程序创建了两个线程，分别执行函数 <code>mythread()</code>,但是传入不同的参数。一旦线程创建，可能会立即运行（取决于调度程序的兴致），或者处于就绪状态，等待执行。主线程调用 <code>pthread_join()</code> 等待特定线程完成。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;assert.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;pthread.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="nf">mythread</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">arg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">pthread_t</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">rc</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;main: begin</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rc</span> <span class="o">=</span> <span class="nf">pthread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">p1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">mythread</span><span class="p">,</span> <span class="s">&#34;A&#34;</span><span class="p">);</span> <span class="nf">assert</span><span class="p">(</span><span class="n">rc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rc</span> <span class="o">=</span> <span class="nf">pthread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">p2</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">mythread</span><span class="p">,</span> <span class="s">&#34;B&#34;</span><span class="p">);</span> <span class="nf">assert</span><span class="p">(</span><span class="n">rc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// join waits for the threads to fiish
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">rc</span> <span class="o">=</span> <span class="nf">pthread_join</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span> <span class="nf">assert</span><span class="p">(</span><span class="n">rc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rc</span> <span class="o">=</span> <span class="nf">pthread_join</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span> <span class="nf">assert</span><span class="p">(</span><span class="n">rc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;main: end</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">main: begin
+</span></span><span class="line"><span class="cl">A
+</span></span><span class="line"><span class="cl">B
+</span></span><span class="line"><span class="cl">main: end
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="核心问题-不可控的调度" class="headerLink">
+    <a href="#%e6%a0%b8%e5%bf%83%e9%97%ae%e9%a2%98-%e4%b8%8d%e5%8f%af%e6%8e%a7%e7%9a%84%e8%b0%83%e5%ba%a6" class="header-mark"></a>核心问题：不可控的调度</h4><p>关键并发术语</p>
+<dl>
+<dt>临界区（critical section）</dt>
+<dd>访问共享变量（或更一般的说，共享资源）的代码片段。临界区一定不能由多个线程同时执行。</dd>
+<dt>竞态条件（race condition）</dt>
+<dd>出现在多个执行线程大致同时进入临界区时，他们都试图更新共享的数据结构，导致了令人惊讶的（也许是不希望的）结果。</dd>
+<dt>不确定性（indeterminate）</dt>
+<dd>程序是由一个或多个竞态条件组成，程序的输出因运行而异，具体取决于哪些线程在何时运行。这导致结果不是确定的（deterministic），而我们通常期望计算机系统各处确定的结果。</dd>
+<dt>互斥</dt>
+<dd>为了避免这些问题，线程应该使用某种互斥（mutual exclusion）原语。这样做可以保证只有一个线程进入临界区，从而避免出现竞态，并产生确定的程序输出。</dd>
+</dl>
+<h3 id="chap-27--线程-api" class="headerLink">
+    <a href="#chap-27--%e7%ba%bf%e7%a8%8b-api" class="header-mark"></a>(chap 27) 线程 API</h3><h4 id="线程创建与-join" class="headerLink">
+    <a href="#%e7%ba%bf%e7%a8%8b%e5%88%9b%e5%bb%ba%e4%b8%8e-join" class="header-mark"></a>线程创建与 join</h4><ul>
+<li><code>pthread_create( phtread_t* thread, const pthread_attr_t* attr, void* (*start_routine)(void*), void* arg);</code></li>
+<li><code>int pthread_join(pthread_t thread, void **retval);</code></li>
+</ul>
+<h4 id="锁" class="headerLink">
+    <a href="#%e9%94%81" class="header-mark"></a>锁</h4><p>通过锁（lock）来提供互斥进入临界区的函数，最基本的一对函数是：</p>
+<ul>
+<li><code>int pthread_mutex_lock(pthread_mutex_t *mutex)</code></li>
+<li><code>int pthread_mutex_unlock(pthread_mutex_t *mutex)</code>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kt">pthread_mutex_t</span> <span class="n">lock</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// or whatever your cirtical section is
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lock</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<p>如果在调用 <code>pthread_mutex_lock()</code> 时没有其他线程持有锁，线程将获取该锁并进入临界区。如果另一个线程确实持有该锁，那么尝试获取该锁的线程将不会从该调用返回，直到获得该锁（以为着持有该锁的线程通过解锁调用释放该锁）。</p>
+<p>锁需要通过 <code>PTHREAD_MUTEX-INITIALIZER</code> 或 <code>pthread_mutex_init()</code> 来初始化。</p>
+<h4 id="条件变量" class="headerLink">
+    <a href="#%e6%9d%a1%e4%bb%b6%e5%8f%98%e9%87%8f" class="header-mark"></a>条件变量</h4><p>所有线程库还有一个主要组件（POSIX 线程库也是如此），就是条件变量（condition variable）。当线程之间必须发生某种信号时，如果一个线程在等待另一个线程继续执行某些操作，条件变量就很有用。希望以这种方式进行交互的程序使用两个主要函数：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex);
+</span></span><span class="line"><span class="cl">int pthread_cond_signal(pthread_cond_t *cond);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>pthread_cond_wait()</code> 使调用线程进入休眠状态，因此等待其他线程发出信号，通常当程序中的某些内容发生变化时，现在正在休眠的线程可能会关心它。典型的用法如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+</span></span><span class="line"><span class="cl">pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+</span></span><span class="line"><span class="cl">pthread_mutex_lock(&amp;lock);
+</span></span><span class="line"><span class="cl">while (ready == 0)
+</span></span><span class="line"><span class="cl">    pthread_cond_wait(&amp;cond, &amp;lock);
+</span></span><span class="line"><span class="cl">pthread_mutex_unlock(&amp;lock);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这段代码中，在初始化相关的锁和条件后，一个线程检查变量 ready 是否已经 w 不设置为 0 意外的值。如果没有，那么线程只是简单地调用等待函数以便休眠，知道其他线程唤醒它。</p>
+<p>唤醒线程的代码运行在另外某个线程中，像下面这样：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">pthread_mutex_lock(&amp;lock);
+</span></span><span class="line"><span class="cl">ready = 1;
+</span></span><span class="line"><span class="cl">pthread_cond_signal(&amp;cond);
+</span></span><span class="line"><span class="cl">pthread_mutex_unlock(&amp;lock);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意，在发出信号时（以及修改全局变量 ready 时），我们始终确保持有锁。这确保我们不会在代码中意外引入竞态条件。</p>
+<p>等待调用将锁作为第二个参数，而信号调用只需要一个条件变量。因为等待调用除了使调用线程进入睡眠状态外，还会让调用者释放锁。这样，其他线程可以获得这个锁并将其唤醒。在被唤醒之后返回之前， <code>pthread_cond_wait()</code> 会重新获取该锁，从而确保线程在等待序列开始时获取锁与结束时释放锁之间运行的任何时间，它持有锁。</p>
+<h3 id="chap-28--锁" class="headerLink">
+    <a href="#chap-28--%e9%94%81" class="header-mark"></a>(chap 28) 锁</h3><h4 id="评价锁" class="headerLink">
+    <a href="#%e8%af%84%e4%bb%b7%e9%94%81" class="header-mark"></a>评价锁</h4><dl>
+<dt>是否能完成基本任务</dt>
+<dd>即提供互斥，能够阻止多个线程进入临界区</dd>
+</dl>
+<p>公平性</p>
+<p>性能</p>
+<h4 id="控制中断" class="headerLink">
+    <a href="#%e6%8e%a7%e5%88%b6%e4%b8%ad%e6%96%ad" class="header-mark"></a>控制中断</h4><p>这是最早提供的互斥解决方案之一，在临界区关闭中断。这个解决方案为单处理器系统开发：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">void lock() {
+</span></span><span class="line"><span class="cl">    DisableInterrupts();
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">void unlock() {
+</span></span><span class="line"><span class="cl">    EnableInterrupts();
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="测试并设置指令实现可用的自旋锁" class="headerLink">
+    <a href="#%e6%b5%8b%e8%af%95%e5%b9%b6%e8%ae%be%e7%bd%ae%e6%8c%87%e4%bb%a4%e5%ae%9e%e7%8e%b0%e5%8f%af%e7%94%a8%e7%9a%84%e8%87%aa%e6%97%8b%e9%94%81" class="header-mark"></a>测试并设置指令实现可用的自旋锁</h4><p>测试并设置指令（test-and-set instruction）也叫原子交换（atomic exchange）。</p>
+<p>一些系统提供了指令，支持基于这种概念创建简单的锁。这个指令有不同的名字：在 SPARC 上，这个指令叫 ldstub（load/store unsigned byte，加载/保存无符号字节）；在 x86 上，是 xchg（atomic exchange，原子交换）指令。用如下的 C 代码片段来定义测试并设置指令做了什么：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">int TestAndSet(int *old_ptr, int new) {
+</span></span><span class="line"><span class="cl">    int old = *old_ptr; // fetch old value at old_ptr
+</span></span><span class="line"><span class="cl">    *old_ptr = new;     // store &#39;new&#39; into old_ptr
+</span></span><span class="line"><span class="cl">    return old;         // return the old value
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>测试并设置指令返回 old_ptr 指向的旧值，同时更新为 new 的新值。关键是这些代码是原子地执行。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">typedef struct lock_t {
+</span></span><span class="line"><span class="cl">    int flag;
+</span></span><span class="line"><span class="cl">} lock_t;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">void init(lock_t *lock) {
+</span></span><span class="line"><span class="cl">    // 0 indicates that lock is available, 1 that it is held
+</span></span><span class="line"><span class="cl">    lock-&gt;flag = 0;
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">void lock(lock_t *lock) {
+</span></span><span class="line"><span class="cl">    while (TestAndSet(&amp;lock-&gt;flag, 1) == 1)
+</span></span><span class="line"><span class="cl">        ; // spin-wait (do nothing)
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">void unlock(lock_t *lock) {
+</span></span><span class="line"><span class="cl">    lock-&gt;flag = 0;
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>只要有另一个线程持有锁， <code>TestAndSet()</code> 会重复返回 1,本线程会一直自旋。直到 flag 被改为 0，本线程会调用 <code>TestAndSet()</code>  返回 0 并原子地设置为 1,从而获得锁，进入临界区。</p>
+<p>将测试（test 旧的锁值）和设置（set 新的锁值）合并为一个原子操作后，保证了只有一个线程能获取锁。这就实现了一个有效的互斥原语。</p>
+<h4 id="评价自旋锁" class="headerLink">
+    <a href="#%e8%af%84%e4%bb%b7%e8%87%aa%e6%97%8b%e9%94%81" class="header-mark"></a>评价自旋锁</h4><table>
+<thead>
+<tr>
+<th>正确性</th>
+<th>满足，可以互斥。</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>公平性</td>
+<td>不满足，不提供任何公平性保证，可能导致饿死。</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>单 CPU 下，性能开销相当大，一个线程持有锁进入临界区时被抢占，调度器可能会运行其他每一个线程，其他线程都在竞争锁，都会在放弃 CPU 之前自旋一个时间片，浪费 CPU 周期。</td>
+</tr>
+<tr>
+<td></td>
+<td>多 CPU 下，性能不错(如果线程数大致等于 CPU 数)。线程 A（CPU 1）持有锁，线程 B（CPU 2）自旋，然临界区一般都很短，因此锁很快可用，线程 B 获得锁。自旋等待其他处理器上的锁，没有浪费很多 CPU 周期。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="比较并交换" class="headerLink">
+    <a href="#%e6%af%94%e8%be%83%e5%b9%b6%e4%ba%a4%e6%8d%a2" class="header-mark"></a>比较并交换</h4><p>某些系统提供了另一个硬件原语，即比较并交换指令（SPARC 系统中是 compare-and-swap，x86 系统是 compare-and-exchange）。下面是这条指令的 C 语言伪代码。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">int CompareAndSwap(int *ptr, int expected, int new) {
+</span></span><span class="line"><span class="cl">    int actual = *ptr;
+</span></span><span class="line"><span class="cl">    if (actual == expected)
+</span></span><span class="line"><span class="cl">        *ptr = new;
+</span></span><span class="line"><span class="cl">    return actual;
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可用于无等待同步（wait-free synchronization）。</p>
+<h4 id="链接的加载和条件式存储指令" class="headerLink">
+    <a href="#%e9%93%be%e6%8e%a5%e7%9a%84%e5%8a%a0%e8%bd%bd%e5%92%8c%e6%9d%a1%e4%bb%b6%e5%bc%8f%e5%ad%98%e5%82%a8%e6%8c%87%e4%bb%a4" class="header-mark"></a>链接的加载和条件式存储指令</h4><p>一些平台提供了实现临界区的一对原语。例如 MIPS 架构中，链接的加载（load-linked）和条件式存储（store-conditional）可以用来配合使用，实现其他并发结构。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">int LoadLinked(int *ptr) {
+</span></span><span class="line"><span class="cl">    return *ptr;
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">int StoreConditional(int *ptr, int value) {
+</span></span><span class="line"><span class="cl">    if (no one has updated *ptr since the LoadLinked to this address) {
+</span></span><span class="line"><span class="cl">        *ptr = value;
+</span></span><span class="line"><span class="cl">        return 1; // success!
+</span></span><span class="line"><span class="cl">    } else {
+</span></span><span class="line"><span class="cl">        return 0; // failed to update
+</span></span><span class="line"><span class="cl">    }
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">void lock(lock_t *lock) {
+</span></span><span class="line"><span class="cl">    while (1) {
+</span></span><span class="line"><span class="cl">        while (LoadLinked(&amp;lock-&gt;flag) == 1)
+</span></span><span class="line"><span class="cl">            ; // spin until it&#39;s zero
+</span></span><span class="line"><span class="cl">        if (StoreConditional(&amp;lock-&gt;flag, 1) == 1)
+</span></span><span class="line"><span class="cl">            return; // if set-it-to-1 was a success: all done
+</span></span><span class="line"><span class="cl">                    // otherwise: try it all over again
+</span></span><span class="line"><span class="cl">    }
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">void unlock(lock_t *lock) {
+</span></span><span class="line"><span class="cl">    lock-&gt;flag = 0;
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="获取并增加" class="headerLink">
+    <a href="#%e8%8e%b7%e5%8f%96%e5%b9%b6%e5%a2%9e%e5%8a%a0" class="header-mark"></a>获取并增加</h4><p>最后一个硬件原语是获取并增加(fetch-and-add)指令,它能原子地返回特定地址的旧
+值,并且让该值自增一。获取并增加的 C 语言伪代码如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">int FetchAndAdd(int *ptr) {
+</span></span><span class="line"><span class="cl">    int old = *ptr;
+</span></span><span class="line"><span class="cl">    *ptr = old + 1;
+</span></span><span class="line"><span class="cl">    return old;
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">typedef struct lock_t {
+</span></span><span class="line"><span class="cl">    int ticket;
+</span></span><span class="line"><span class="cl">    int turn;
+</span></span><span class="line"><span class="cl">} lock_t;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">void lock_init(lock_t *lock) {
+</span></span><span class="line"><span class="cl">    lock-&gt;ticket = 0;
+</span></span><span class="line"><span class="cl">    lock-&gt;turn = 0;
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">void lock(lock_t *lock) {
+</span></span><span class="line"><span class="cl">    int myturn = FetchAndAdd(&amp;lock-&gt;ticket);
+</span></span><span class="line"><span class="cl">    while (lock-&gt;turn != myturn)
+</span></span><span class="line"><span class="cl">        ; // spin
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">void unlock(lock_t *lock) {
+</span></span><span class="line"><span class="cl">    FetchAndAdd(&amp;lock-&gt;turn);
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果线程希望获取锁,首先对一个 ticket 值执行一个原子的获取并相加指令。这个值作为该 线程的“turn” (顺位,即 myturn)。根据全局共享的 lock-&gt;turn 变量,当某一个线程的(myturn
+== turn)时,则轮到这个线程进入临界区。unlock 则是增加 turn,从而下一个等待线程可以进入临界区。</p>
+<p>不同于之前的方法:本方法能够保证所有线程都能抢到锁。只要一个线程获得了 ticket 值,它最终会被调度。之前的方法则不会保证。比如基于测试并设置的方法,一个线程有 可能一直自旋,即使其他线程在获取和释放锁。</p>
+<h4 id="使用队列-休眠代替自旋" class="headerLink">
+    <a href="#%e4%bd%bf%e7%94%a8%e9%98%9f%e5%88%97-%e4%bc%91%e7%9c%a0%e4%bb%a3%e6%9b%bf%e8%87%aa%e6%97%8b" class="header-mark"></a>使用队列：休眠代替自旋</h4><h4 id="两阶段锁" class="headerLink">
+    <a href="#%e4%b8%a4%e9%98%b6%e6%ae%b5%e9%94%81" class="header-mark"></a>两阶段锁</h4><h3 id="chap-29--基于锁的并发数据结构" class="headerLink">
+    <a href="#chap-29--%e5%9f%ba%e4%ba%8e%e9%94%81%e7%9a%84%e5%b9%b6%e5%8f%91%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84" class="header-mark"></a>(chap 29) 基于锁的并发数据结构</h3></div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-17</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+            <a href="/posts/python-%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90/" class="next" rel="next" title="Python 命令行参数解析">Python 命令行参数解析<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>

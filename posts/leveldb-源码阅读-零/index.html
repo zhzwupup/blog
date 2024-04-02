@@ -1,0 +1,468 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>LevelDB 源码阅读 零 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="LevelDB 源码阅读 零" />
+<meta property="og:description" content="google/leveldb: LevelDB is a fast key-value storage library written at Google that provides an ordered mapping from string keys to string values. 简介 Features Keys and values are arbitrary byte arrays. Data is stored sorted by key. Callers can provide a custom comparison function to override the sort order. The basic operations are Put(key,value), Get(key), Delete(key) . Multiple changes can be made in one atomic batch. Users can create" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-01-17T00:00:00+08:00" />
+<meta property="article:modified_time" content="2024-01-17T19:20:41+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="LevelDB 源码阅读 零"/>
+<meta name="twitter:description" content="google/leveldb: LevelDB is a fast key-value storage library written at Google that provides an ordered mapping from string keys to string values. 简介 Features Keys and values are arbitrary byte arrays. Data is stored sorted by key. Callers can provide a custom comparison function to override the sort order. The basic operations are Put(key,value), Get(key), Delete(key) . Multiple changes can be made in one atomic batch. Users can create"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6/" /><link rel="prev" href="http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3/" /><link rel="next" href="http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%BA%8C-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "LevelDB 源码阅读 零",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6\/"
+        },"genre": "posts","keywords": "LevelDB","wordcount":  704 ,
+        "url": "http:\/\/localhost:1313\/posts\/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6\/","datePublished": "2024-01-17T00:00:00+08:00","dateModified": "2024-01-17T19:20:41+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#简介">简介</a>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#limitations">Limitations</a></li>
+          </ul>
+        </li>
+        <li><a href="#概览">概览</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">LevelDB 源码阅读 零</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-01-17">2024-01-17</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-17">2024-01-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 704 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 2 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#简介">简介</a>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#limitations">Limitations</a></li>
+          </ul>
+        </li>
+        <li><a href="#概览">概览</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p><a href="https://github.com/google/leveldb" target="_blank" rel="noopener noreferrer">google/leveldb: LevelDB is a fast key-value storage library written at Google that provides an ordered mapping from string keys to string values.</a></p>
+<h2 id="简介" class="headerLink">
+    <a href="#%e7%ae%80%e4%bb%8b" class="header-mark"></a>简介</h2><h3 id="features" class="headerLink">
+    <a href="#features" class="header-mark"></a>Features</h3><ul>
+<li>Keys and values are arbitrary byte arrays.</li>
+<li>Data is stored sorted by key.</li>
+<li>Callers can provide a custom comparison function to override the sort order.</li>
+<li>The basic operations are <code>Put(key,value)</code>, <code>Get(key)</code>, <code>Delete(key)</code> .</li>
+<li>Multiple changes can be made in one atomic batch.</li>
+<li>Users can create a transient snapshot to get a consistent view of data.</li>
+<li>Forward and backward iteration is supported over the data.</li>
+<li>Data is automatically compressed using the <a href="https://google.github.io/snappy/" target="_blank" rel="noopener noreferrer">Snappy compression library</a>, but <a href="https://facebook.github.io/zstd/" target="_blank" rel="noopener noreferrer">Zstd compression</a> is also supported.</li>
+<li>External activity (file system operations etc.) is relayed through a virtual interface so users can customize the operating system interactions.</li>
+</ul>
+<h3 id="limitations" class="headerLink">
+    <a href="#limitations" class="header-mark"></a>Limitations</h3><ul>
+<li>This is not a SQL database. It does not have a relational data model, it does not support SQL queries, and it has no support for indexes.</li>
+<li>Only a single process (possibly multi-threaded) can access a particular database at a time.</li>
+<li>There is no client-server support builtin to the library. An application that needs such support will have to wrap their own server around the library.</li>
+</ul>
+<h2 id="概览" class="headerLink">
+    <a href="#%e6%a6%82%e8%a7%88" class="header-mark"></a>概览</h2><p>选择最新的 1.23 版本。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">cd</span> <span class="nv">$leveldb</span>
+</span></span><span class="line"><span class="cl">git tag
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1.21
+</span></span><span class="line"><span class="cl">1.22
+</span></span><span class="line"><span class="cl">1.23
+</span></span><span class="line"><span class="cl">v1.10
+</span></span><span class="line"><span class="cl">v1.11
+</span></span><span class="line"><span class="cl">v1.12
+</span></span><span class="line"><span class="cl">v1.13
+</span></span><span class="line"><span class="cl">v1.14
+</span></span><span class="line"><span class="cl">v1.15
+</span></span><span class="line"><span class="cl">v1.16
+</span></span><span class="line"><span class="cl">v1.17
+</span></span><span class="line"><span class="cl">v1.18
+</span></span><span class="line"><span class="cl">v1.19
+</span></span><span class="line"><span class="cl">v1.20
+</span></span><span class="line"><span class="cl">v1.3
+</span></span><span class="line"><span class="cl">v1.4
+</span></span><span class="line"><span class="cl">v1.5
+</span></span><span class="line"><span class="cl">v1.6
+</span></span><span class="line"><span class="cl">v1.7
+</span></span><span class="line"><span class="cl">v1.8
+</span></span><span class="line"><span class="cl">v1.9
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>看一下代码规模（排除 third_party 目录和测试文件）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">cd</span> <span class="nv">$leveldb</span>
+</span></span><span class="line"><span class="cl">cloc . --exclude-dir<span class="o">=</span>third_party,build,benchmarks --not-match-f<span class="o">=</span><span class="s1">&#39;_test.cc$&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># or</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> -e <span class="s2">&#34;\n\n\n&#34;</span>
+</span></span><span class="line"><span class="cl">cloc ./db ./helpers ./include ./port ./table ./util  --not-match-f<span class="o">=</span><span class="s1">&#39;_test.cc$&#39;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">     100 files
+</span></span><span class="line"><span class="cl">     122 text files.
+</span></span><span class="line"><span class="cl">classified 114 files
+</span></span><span class="line"><span class="cl">Duplicate file check 114 files (111 known unique)
+</span></span><span class="line"><span class="cl">Unique:      100 files                                          
+</span></span><span class="line"><span class="cl">     114 unique files.
+</span></span><span class="line"><span class="cl">Counting:  100
+</span></span><span class="line"><span class="cl">     227 files ignored.
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">github.com/AlDanial/cloc v 1.96  T=0.16 s (695.4 files/s, 125745.6 lines/s)
+</span></span><span class="line"><span class="cl">-------------------------------------------------------------------------------
+</span></span><span class="line"><span class="cl">Language                     files          blank        comment           code
+</span></span><span class="line"><span class="cl">-------------------------------------------------------------------------------
+</span></span><span class="line"><span class="cl">C++                             42           1450           1114           9150
+</span></span><span class="line"><span class="cl">C/C++ Header                    56           1131           1635           2831
+</span></span><span class="line"><span class="cl">Markdown                         7            274              0            880
+</span></span><span class="line"><span class="cl">JSON                             2              0              0            661
+</span></span><span class="line"><span class="cl">HTML                             1             39              0            420
+</span></span><span class="line"><span class="cl">CMake                            2             62             47            395
+</span></span><span class="line"><span class="cl">C                                1             44             11            329
+</span></span><span class="line"><span class="cl">YAML                             3             15             23            104
+</span></span><span class="line"><span class="cl">-------------------------------------------------------------------------------
+</span></span><span class="line"><span class="cl">SUM:                           114           3015           2830          14770
+</span></span><span class="line"><span class="cl">-------------------------------------------------------------------------------
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">     100 files
+</span></span><span class="line"><span class="cl">     101 text files.
+</span></span><span class="line"><span class="cl">classified 100 files
+</span></span><span class="line"><span class="cl">     100 unique files.
+</span></span><span class="line"><span class="cl">Counting:  100
+</span></span><span class="line"><span class="cl">       1 file ignored.
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">github.com/AlDanial/cloc v 1.96  T=0.08 s (1239.2 files/s, 219403.4 lines/s)
+</span></span><span class="line"><span class="cl">-------------------------------------------------------------------------------
+</span></span><span class="line"><span class="cl">Language                     files          blank        comment           code
+</span></span><span class="line"><span class="cl">-------------------------------------------------------------------------------
+</span></span><span class="line"><span class="cl">C++                             42           1450           1114           9150
+</span></span><span class="line"><span class="cl">C/C++ Header                    56           1131           1635           2831
+</span></span><span class="line"><span class="cl">C                                1             44             11            329
+</span></span><span class="line"><span class="cl">Markdown                         1              3              0              7
+</span></span><span class="line"><span class="cl">-------------------------------------------------------------------------------
+</span></span><span class="line"><span class="cl">SUM:                           100           2628           2760          12317
+</span></span><span class="line"><span class="cl">-------------------------------------------------------------------------------
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>项目结构</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">cd</span> <span class="nv">$leveldb</span>
+</span></span><span class="line"><span class="cl">tree -F -L <span class="m">1</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">./
+</span></span><span class="line"><span class="cl">├── AUTHORS
+</span></span><span class="line"><span class="cl">├── benchmarks/
+</span></span><span class="line"><span class="cl">├── build/
+</span></span><span class="line"><span class="cl">├── cmake/
+</span></span><span class="line"><span class="cl">├── CMakeLists.txt
+</span></span><span class="line"><span class="cl">├── compile_commands.json -&gt; build/compile_commands.json
+</span></span><span class="line"><span class="cl">├── CONTRIBUTING.md
+</span></span><span class="line"><span class="cl">├── db/
+</span></span><span class="line"><span class="cl">├── doc/
+</span></span><span class="line"><span class="cl">├── helpers/
+</span></span><span class="line"><span class="cl">├── include/
+</span></span><span class="line"><span class="cl">├── issues/
+</span></span><span class="line"><span class="cl">├── LICENSE
+</span></span><span class="line"><span class="cl">├── NEWS
+</span></span><span class="line"><span class="cl">├── port/
+</span></span><span class="line"><span class="cl">├── README.md
+</span></span><span class="line"><span class="cl">├── table/
+</span></span><span class="line"><span class="cl">├── third_party/
+</span></span><span class="line"><span class="cl">├── TODO
+</span></span><span class="line"><span class="cl">└── util/
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">13 directories, 8 files
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以分类如下</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>编译相关</td>
+<td>CmakeLists.txt, cmake/</td>
+</tr>
+<tr>
+<td>核心源码，包括公开接口与核心实现</td>
+<td>include/, db/, table/</td>
+</tr>
+<tr>
+<td>较独立的工具、测试、配置代码</td>
+<td>benchmarks/, helpers/, port/, util/</td>
+</tr>
+<tr>
+<td>文档</td>
+<td>doc/, READMD.md</td>
+</tr>
+<tr>
+<td>可忽略的文件</td>
+<td>AUTHORS, CONTRIBUTING.md, issues/, LICENSE, NEWS, third_party/, TODO</td>
+</tr>
+</tbody>
+</table>
+<p><a href="https://blog.ayistar.com/posts/leveldb-source-code/leveldb-source-code_00-overview/" target="_blank" rel="noopener noreferrer">[LevelDB源码阅读] 零: 总序 | AyiStar&rsquo;s Blog</a></p>
+</div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-17</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/leveldb/">LevelDB</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3/" class="prev" rel="prev" title="LevelDB 源码阅读 一：公开接口"><i class="fas fa-angle-left fa-fw"></i>LevelDB 源码阅读 一：公开接口</a>
+            <a href="/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%BA%8C-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/" class="next" rel="next" title="LevelDb 源码阅读 二：基本原理">LevelDb 源码阅读 二：基本原理<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>

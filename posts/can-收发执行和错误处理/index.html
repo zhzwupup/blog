@@ -1,0 +1,168 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>CAN 收发执行和错误处理 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="CAN 收发执行和错误处理" />
+<meta property="og:description" content="BSP视频教程第25期：CAN/CANFD/CANopen专题，CAN知识点干货分享, 收发执行过程和错误帧处理（2023-01-03） 参考资" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-10-20T03:46:00+08:00" />
+<meta property="article:modified_time" content="2024-01-17T19:20:38+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CAN 收发执行和错误处理"/>
+<meta name="twitter:description" content="BSP视频教程第25期：CAN/CANFD/CANopen专题，CAN知识点干货分享, 收发执行过程和错误帧处理（2023-01-03） 参考资"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" /><link rel="prev" href="http://localhost:1313/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/" /><link rel="next" href="http://localhost:1313/posts/can-knowledge/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "CAN 收发执行和错误处理",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86\/"
+        },"genre": "posts","keywords": "CAN","wordcount":  162 ,
+        "url": "http:\/\/localhost:1313\/posts\/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86\/","datePublished": "2023-10-20T03:46:00+08:00","dateModified": "2024-01-17T19:20:38+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents"></nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">CAN 收发执行和错误处理</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/"><i class="far fa-folder fa-fw"></i>嵌入式</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-10-20">2023-10-20</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-17">2024-01-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 162 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><p><a href="https://www.armbbs.cn/forum.php?mod=viewthread&amp;tid=117387" target="_blank" rel="noopener noreferrer">BSP视频教程第25期：CAN/CANFD/CANopen专题，CAN知识点干货分享, 收发执行过程和错误帧处理（2023-01-03）</a></p>
+<figure><img src="/ox-hugo/2023-10-20_03-26-07_O1CN01p2LAHU1gIYCVEy12r_!!299314119.png"/>
+</figure>
+
+<figure><img src="/ox-hugo/2023-10-20_03-26-31_O1CN01ILc15G1gIYCVF0MZs_!!299314119.png"/>
+</figure>
+
+<figure><img src="/ox-hugo/2023-10-20_03-28-32_O1CN015DjDGB1gIYCP5Rztm_!!299314119.png"/>
+</figure>
+
+<p>参考资料：</p>
+<ol>
+<li><a href="https://www.armbbs.cn/forum.php?mod=viewthread&amp;tid=104480" target="_blank" rel="noopener noreferrer">CAN总线35周年特别篇 &ndash; CAN总线的前世今生</a></li>
+<li><a href="https://en.wikipedia.org/wiki/CAN_bus" target="_blank" rel="noopener noreferrer">WiKi百科CAN总线</a></li>
+<li><a href="https://www.armbbs.cn/forum.php?mod=viewthread&amp;tid=14546" target="_blank" rel="noopener noreferrer">瑞萨CAN入门教程</a></li>
+<li><a href="https://www.kvaser.com/can-protocol-tutorial/" target="_blank" rel="noopener noreferrer">Kvaser入门教程</a></li>
+<li><a href="https://www.armbbs.cn/forum.php?mod=viewthread&amp;tid=104463" target="_blank" rel="noopener noreferrer">MDK的CAN入门教程</a></li>
+<li><a href="https://www.armbbs.cn/forum.php?mod=viewthread&amp;tid=104728" target="_blank" rel="noopener noreferrer">CANFD教程：</a></li>
+<li><a href="https://www.armbbs.cn/forum.php?mod=viewthread&amp;tid=117358" target="_blank" rel="noopener noreferrer">博世的CAN2.0和CANFD规格书</a></li>
+</ol>
+</div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-17</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/can/">CAN</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/" class="prev" rel="prev" title="CAN 总线的前世今生"><i class="fas fa-angle-left fa-fw"></i>CAN 总线的前世今生</a>
+            <a href="/posts/can-knowledge/" class="next" rel="next" title="CAN knowledge">CAN knowledge<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>

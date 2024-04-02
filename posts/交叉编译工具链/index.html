@@ -1,0 +1,617 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>交叉编译工具链 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="交叉编译工具链" />
+<meta property="og:description" content="什么是交叉编译工具链？A set of tools that allows to build source code into binary code for a target platform different than the one where the build takes place Different CPU architecture Different ABI Different operating system Different C library 构建过程涉及三种机器 build machine, where the build takes place host machine, where the execution" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-10-19T11:00:00+08:00" />
+<meta property="article:modified_time" content="2024-01-17T19:20:34+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="交叉编译工具链"/>
+<meta name="twitter:description" content="什么是交叉编译工具链？A set of tools that allows to build source code into binary code for a target platform different than the one where the build takes place Different CPU architecture Different ABI Different operating system Different C library 构建过程涉及三种机器 build machine, where the build takes place host machine, where the execution"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE/" /><link rel="prev" href="http://localhost:1313/posts/python-yield/" /><link rel="next" href="http://localhost:1313/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "交叉编译工具链",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE\/"
+        },"genre": "posts","wordcount":  2311 ,
+        "url": "http:\/\/localhost:1313\/posts\/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE\/","datePublished": "2023-10-19T11:00:00+08:00","dateModified": "2024-01-17T19:20:34+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#什么是交叉编译工具链">什么是交叉编译工具链？</a></li>
+        <li><a href="#工具链元组-toolchain-tuple">工具链元组（toolchain tuple）</a></li>
+        <li><a href="#bare-metal-对比-linux-工具链">Bare-metal 对比 Linux 工具链</a></li>
+        <li><a href="#工具链的组成部分">工具链的组成部分</a>
+          <ul>
+            <li><a href="#binutils">binutils</a></li>
+            <li><a href="#gcc">gcc</a></li>
+            <li><a href="#linux-kernel-headers">Linux Kernel headers</a></li>
+            <li><a href="#c-库">C 库</a></li>
+          </ul>
+        </li>
+        <li><a href="#gcc-的依赖">gcc 的依赖</a></li>
+        <li><a href="#linux-交叉编译工具链构建过程">Linux 交叉编译工具链构建过程</a></li>
+        <li><a href="#sysroot">sysroot</a></li>
+        <li><a href="#multilib-toolchains">Multilib toolchains</a></li>
+        <li><a href="#toolchain-内容">Toolchain 内容</a></li>
+        <li><a href="#针对特定架构">针对特定架构</a></li>
+        <li><a href="#abi-定义">ABI: 定义</a></li>
+        <li><a href="#abi-以-arm32-为例">ABI: 以 ARM32 为例</a></li>
+        <li><a href="#toolchain-sdk-和-build-system-的不同">Toolchain, SDK 和 Build system 的不同</a></li>
+        <li><a href="#如何获取交叉编译工具链">如何获取交叉编译工具链</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">交叉编译工具链</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-10-19">2023-10-19</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-17">2024-01-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2311 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 5 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#什么是交叉编译工具链">什么是交叉编译工具链？</a></li>
+        <li><a href="#工具链元组-toolchain-tuple">工具链元组（toolchain tuple）</a></li>
+        <li><a href="#bare-metal-对比-linux-工具链">Bare-metal 对比 Linux 工具链</a></li>
+        <li><a href="#工具链的组成部分">工具链的组成部分</a>
+          <ul>
+            <li><a href="#binutils">binutils</a></li>
+            <li><a href="#gcc">gcc</a></li>
+            <li><a href="#linux-kernel-headers">Linux Kernel headers</a></li>
+            <li><a href="#c-库">C 库</a></li>
+          </ul>
+        </li>
+        <li><a href="#gcc-的依赖">gcc 的依赖</a></li>
+        <li><a href="#linux-交叉编译工具链构建过程">Linux 交叉编译工具链构建过程</a></li>
+        <li><a href="#sysroot">sysroot</a></li>
+        <li><a href="#multilib-toolchains">Multilib toolchains</a></li>
+        <li><a href="#toolchain-内容">Toolchain 内容</a></li>
+        <li><a href="#针对特定架构">针对特定架构</a></li>
+        <li><a href="#abi-定义">ABI: 定义</a></li>
+        <li><a href="#abi-以-arm32-为例">ABI: 以 ARM32 为例</a></li>
+        <li><a href="#toolchain-sdk-和-build-system-的不同">Toolchain, SDK 和 Build system 的不同</a></li>
+        <li><a href="#如何获取交叉编译工具链">如何获取交叉编译工具链</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="什么是交叉编译工具链" class="headerLink">
+    <a href="#%e4%bb%80%e4%b9%88%e6%98%af%e4%ba%a4%e5%8f%89%e7%bc%96%e8%af%91%e5%b7%a5%e5%85%b7%e9%93%be" class="header-mark"></a>什么是交叉编译工具链？</h2><p>A set of tools that allows to build source code into binary code for a target
+platform different than the one where the build takes place</p>
+<ul>
+<li>Different CPU architecture</li>
+<li>Different ABI</li>
+<li>Different operating system</li>
+<li>Different C library</li>
+</ul>
+<p>构建过程涉及三种机器</p>
+<ul>
+<li>build machine, where the build takes place</li>
+<li>host machine, where the execution takes place</li>
+<li>target machine, for which the programs generate code</li>
+</ul>
+<p>原生工具链： build <code>= host =</code> target
+交叉编译工具链： build <code>= host !</code> target
+<code>configure</code> 脚本中通过 <code>--build</code>, <code>--host</code> 和 <code>--target</code> 来指定。</p>
+<h2 id="工具链元组-toolchain-tuple" class="headerLink">
+    <a href="#%e5%b7%a5%e5%85%b7%e9%93%be%e5%85%83%e7%bb%84-toolchain-tuple" class="header-mark"></a>工具链元组（toolchain tuple）</h2><p>autoconf 定义了 “系统定义” 的概念，体现为“元组”。包含 CPU 架构、操作系统、供应商、ABI 和 C 库。
+形式</p>
+<ul>
+<li>&lt;arch&gt;-&lt;vendor&gt;-&lt;os&gt;-&lt;libc/abi&gt;, 完整形式</li>
+<li>&lt;arch&gt;-&lt;os&gt;-&lt;libc/abi&gt;</li>
+</ul>
+<p>各项含义如下：</p>
+<ul>
+<li>&lt;arch&gt;, the CPU architecture: arm, mips, powerpc, i386, i686, etc.</li>
+<li>&lt;vendor&gt;, (mostly) free-form string, ignored by autoconf</li>
+<li>&lt;os&gt;, the operating system. Either none or linux for the purpose of this talk.</li>
+<li>&lt;libc/abi&gt;, combination of details on the C library and the ABI in use</li>
+</ul>
+<p>例子：</p>
+<ul>
+<li>arm-foo-none-eabi, bare-metal toolchain targeting the ARM architecture, from vendor foo</li>
+<li>arm-unknown-linux-gnueabihf, Linux toolchain targeting the ARM architecture, using the EABIhf ABI and the glibc C library, from an unknown vendor</li>
+<li>armeb-linux-uclibcgnueabi, Linux toolchain targeting the ARM big-endian architecture, using the EABI ABI and the uClibc C library</li>
+<li>mips-img-linux-gnu, Linux toolchain targeting the MIPS architecture, using the glibc C library, provided by Imagination Technologies.</li>
+</ul>
+<h2 id="bare-metal-对比-linux-工具链" class="headerLink">
+    <a href="#bare-metal-%e5%af%b9%e6%af%94-linux-%e5%b7%a5%e5%85%b7%e9%93%be" class="header-mark"></a>Bare-metal 对比 Linux 工具链</h2><p>&lt;os&gt; 的两个值</p>
+<ul>
+<li>none for <strong>bare-metal</strong> toolchains
+<ul>
+<li>Used for development without an operating system</li>
+<li>C library used is generally <strong>newlib</strong></li>
+<li>Provides C library services that do not require an operating system</li>
+<li>Allows to provide basic system calls for specific hardware targets</li>
+<li>Can be used to build bootloaders or the Linux kernel, cannot build Linux userspace</li>
+<li>code</li>
+</ul>
+</li>
+<li>linux for Linux toolchains
+<ul>
+<li>Used for development with a Linux operating system</li>
+<li>Choice of Linux-specific C libraries: <strong>glibc, uclibc, musl</strong></li>
+<li>Supports Linux system calls</li>
+<li>Can be used to build Linux userspace code, but also bare-metal code such as bootloaders or the kernel itself</li>
+</ul>
+</li>
+</ul>
+<h2 id="工具链的组成部分" class="headerLink">
+    <a href="#%e5%b7%a5%e5%85%b7%e9%93%be%e7%9a%84%e7%bb%84%e6%88%90%e9%83%a8%e5%88%86" class="header-mark"></a>工具链的组成部分</h2><p>Linux 交叉编译工具链有 4 个核心组成部分：</p>
+<ol>
+<li>binutils</li>
+<li>gcc</li>
+<li>Linux kernel headers</li>
+<li>C library</li>
+</ol>
+<p>除了这些，还有一些依赖用于构建 gcc 自身。</p>
+<h3 id="binutils" class="headerLink">
+    <a href="#binutils" class="header-mark"></a>binutils</h3><p>&ldquo;collection of binary tools&rdquo;</p>
+<ul>
+<li>主要工具
+<ul>
+<li>ld，链接器，链接多个对象文件为一个共享库、可执行文件或另一个对象文件。</li>
+<li>as，汇编器，使用架构相关的文本形式的汇编代码，生成对应的二进制对象文件。</li>
+</ul>
+</li>
+<li>调试、分析和其他工具
+<ul>
+<li>addr2line, ar, c++filt, gold, gprof, nm, objcopy, objdump, ranlib, readelf, size, strings, strip</li>
+</ul>
+</li>
+<li>需要为每个 CPU 架构配置，x86 的 binutils 不能产生 ARM 的代码。</li>
+</ul>
+<h3 id="gcc" class="headerLink">
+    <a href="#gcc" class="header-mark"></a>gcc</h3><ul>
+<li>Front-ends for many source languages：C, C++, Fortran, Go, etc.</li>
+<li>Back-ends for many CPU architectures.</li>
+<li>提供了
+<ul>
+<li>编译器自身（compiler inself）， <code>cc1</code> for C, <code>cc1plus</code> for C++。只生成文本形式的汇编代码。</li>
+<li>编译器驱动（compiler driver），驱动编译器自身以及 binutils assembler and linker。</li>
+<li>Target libraries: libgcc(gcc runtime), libstdc++(the C++ library), libgfortran(the Fortran runtime)</li>
+<li>标准 C++ 库的头文件</li>
+</ul>
+</li>
+</ul>
+<h3 id="linux-kernel-headers" class="headerLink">
+    <a href="#linux-kernel-headers" class="header-mark"></a>Linux Kernel headers</h3><ul>
+<li>为了构建 C 库，需要 Linux Kernel headers: definitions of system call numbers, various structure types and definitions.</li>
+<li>在 kernel, 头文件被分为：
+<ul>
+<li>用户空间可见的，存储在 <code>uapi</code> 目录： <code>include/uapi/arch/&lt;ARCH&gt;/include/uapi/asm</code></li>
+<li>Internal kernel headers</li>
+</ul>
+</li>
+<li>Installation takes place using
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">  make ARCH=.. INSTALL_HDR_PATH=... headers_install
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<h3 id="c-库" class="headerLink">
+    <a href="#c-%e5%ba%93" class="header-mark"></a>C 库</h3><ul>
+<li>提供 POSIX 标准函数的实现，以及其他几个标准和扩展</li>
+<li>基于 Linux 系统调用</li>
+<li>有几种可用实现
+<ul>
+<li>glibc</li>
+<li>uClibc-ng(formerly uClibc)</li>
+<li>musl</li>
+<li>bionic, for Android system</li>
+<li>A few other more special-purpose: newlib(for bare-metal), dietlibc, klibc</li>
+</ul>
+</li>
+<li>编译安装后，可以提供
+<ul>
+<li>动态链接器（dynamic linker）， <code>ld.so</code></li>
+<li>C 库本身 <code>libc.so</code>,和伴随的一些库： <code>libm, librt, libpthread, libutil, libnsl, libresolv, libcrypt</code></li>
+<li>C 库的头文件： <code>stdio.h, string.h</code> 等等。</li>
+</ul>
+</li>
+</ul>
+<h2 id="gcc-的依赖" class="headerLink">
+    <a href="#gcc-%e7%9a%84%e4%be%9d%e8%b5%96" class="header-mark"></a>gcc 的依赖</h2><p>构建 gcc 需要几个数学库，这些数学库为 host machine 编译， target machine 不需要。</p>
+<ul>
+<li>mpfr, multiple-precision floating-point computations. Used since gcc 4.3 to evaluate and replace at compile-time calls to built-in math functions having constant arguments with their mathematically equivalent results</li>
+<li>gmp, dependency of mpfr</li>
+<li>mpc, for computation of complex numbers. Used since gcc 4.5 to evaluate calls to complex built-in math functions having constant arguments and replace them at compile time with their mathematically equivalent result</li>
+</ul>
+<h2 id="linux-交叉编译工具链构建过程" class="headerLink">
+    <a href="#linux-%e4%ba%a4%e5%8f%89%e7%bc%96%e8%af%91%e5%b7%a5%e5%85%b7%e9%93%be%e6%9e%84%e5%bb%ba%e8%bf%87%e7%a8%8b" class="header-mark"></a>Linux 交叉编译工具链构建过程</h2><ol>
+<li>Build binutils</li>
+<li>Build the dependencies of gcc: mpfr, gmp, mpc</li>
+<li>Install the Linux kernel headers</li>
+<li>Build a first stage gcc: no support for a C library, support only for static linking</li>
+<li>Build the C library using the first stage gcc</li>
+<li>Build the final gcc, with C library and support for dynamic linking</li>
+</ol>
+<h2 id="sysroot" class="headerLink">
+    <a href="#sysroot" class="header-mark"></a>sysroot</h2><ul>
+<li>sysroot 是头文件和库的逻辑根目录。</li>
+<li>gcc 用来查找头文件，ld 用来查找库。</li>
+<li>构建 gcc 和 binutils 都带有 <code>--with-sysroot=&lt;SYSROOT&gt;</code></li>
+<li>kernel headers 和 C 库都安装在 <code>&lt;SYSROOT&gt;</code></li>
+<li>如果 toolchain 被移动到其他地方， sysroot 被设置为 prefix 的子目录，gcc 仍能找到 sysroot。
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">   --prefix=/home/thomas/buildroot/arm-uclibc/host/usr
+</span></span><span class="line"><span class="cl">   --with-sysroot=/home/thomas/buildroot/arm-uclibc/host/usr/arm- buildroot-linux-uclibcgnueabihf/sysroot
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>可以使用 gcc 的 <code>--sysroot</code> 选项覆盖。</li>
+<li>可以使用 <code>-print-sysroot</code> 打印当前的 sysroot。</li>
+</ul>
+<h2 id="multilib-toolchains" class="headerLink">
+    <a href="#multilib-toolchains" class="header-mark"></a>Multilib toolchains</h2><ul>
+<li>大多数工具链为 C 库和 gcc 运行时库提供 <strong>单一 sysroot</strong></li>
+<li>These libraries, built for the target, are optimized for a <strong>specific architecture variant and ABI</strong></li>
+<li>每个 architecture variant 或者 ABI 都需要一个工具链</li>
+<li><strong>Multilib</strong> toolchains 包含多个 sysroot，each having a version of the target libraries for different architecture/ABI variants.</li>
+<li>Example of the Sourcery CodeBench ARM toolchain:</li>
+</ul>
+<!--listend-->
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ arm-none-linux-gnueabi-gcc -print-multi-lib
+</span></span><span class="line"><span class="cl">.;
+</span></span><span class="line"><span class="cl">armv4t;@march=armv4t
+</span></span><span class="line"><span class="cl">thumb2;@mthumb@march=armv7-a
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>Three sysroots: ARMv5, ARMv4 and ARMv7 Thumb-2</li>
+<li>编译器根据 gcc 标志自动选择正确的 sysroot</li>
+</ul>
+<!--listend-->
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ arm-none-linux-gnueabi-gcc -march=armv5te -print-sysroot
+</span></span><span class="line"><span class="cl">.../bin/../arm-none-linux-gnueabi/libc
+</span></span><span class="line"><span class="cl">$ arm-none-linux-gnueabi-gcc -march=armv4t -print-sysroot
+</span></span><span class="line"><span class="cl">.../bin/../arm-none-linux-gnueabi/libc/armv4t
+</span></span><span class="line"><span class="cl">$ arm-none-linux-gnueabi-gcc -march=armv7-a -mthumb -print-sysroot
+</span></span><span class="line"><span class="cl">.../bin/../arm-none-linux-gnueabi/libc/thumb2
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>每个 sysroot 有不同的库</li>
+</ul>
+<!--listend-->
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ readelf -A arm-none-linux-gnueabi/libc/lib/ld-2.18.so
+</span></span><span class="line"><span class="cl">Tag_CPU_name: &#34;5TE&#34;
+</span></span><span class="line"><span class="cl">Tag_CPU_arch: v5TE
+</span></span><span class="line"><span class="cl">$ readelf -A arm-none-linux-gnueabi/libc/armv4t/lib/ld-2.18.so
+</span></span><span class="line"><span class="cl">Tag_CPU_name: &#34;4T&#34;
+</span></span><span class="line"><span class="cl">Tag_CPU_arch: v4T
+</span></span><span class="line"><span class="cl">$ readelf -A arm-none-linux-gnueabi/libc/thumb2/lib/ld-2.18.so
+</span></span><span class="line"><span class="cl">Tag_CPU_name: &#34;7-A&#34;
+</span></span><span class="line"><span class="cl">Tag_CPU_arch: v7
+</span></span><span class="line"><span class="cl">Tag_THUMB_ISA_use: Thumb-2
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="toolchain-内容" class="headerLink">
+    <a href="#toolchain-%e5%86%85%e5%ae%b9" class="header-mark"></a>Toolchain 内容</h2><p>使用 Buildroot 生成的交叉编译工具链包含以下内容：</p>
+<ul>
+<li>arm-buildroot-linux-uclibcgnueabihf/
+<ul>
+<li>bin/
+<ul>
+<li>Limited set of binutils programs, without their cross-compilation prefix. Hard links to their counterparts with the prefix. This is where gcc finds them.</li>
+</ul>
+</li>
+<li>include/c++/4.9.4/
+<ul>
+<li>Headers for the C++ standard library, installed by gcc</li>
+<li>Interestingly, they are not part of the sysroot per-se.</li>
+</ul>
+</li>
+<li>lib/
+<ul>
+<li>The gcc runtime libraries, built for the target</li>
+<li>libatomic, provides a software implementation of atomic built-ins, when needed</li>
+<li>libgcc, the main gcc runtime (optimized functions, 64-bit division, floating point emulation)</li>
+<li>libitm, transactional memory library</li>
+<li>libstdc++, standard C++ library</li>
+<li>libsupc++, subset of libstdc++ with only the language support functions</li>
+</ul>
+</li>
+<li>sysroot/
+<ul>
+<li>lib/, usr/lib/: C library and gcc runtime libraries (shared and static)</li>
+<li>usr/include/, Linux kernel and C library headers</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>bin/
+<ul>
+<li>arm-buildroot-linux-uclibcgnueabihf- prefixed tools</li>
+<li>From binutils: addr2line, ar, as, elfedit, gcov, gprof, ld, nm, objcopy, objdump, ranlib, readelf, size, strings, strip</li>
+<li>From gcc: c++ (same as g++), cc (same as gcc), cpp, g++, gcc, gcc-ar, gcc-nm, gcc-ranlib</li>
+<li>The gcc-{ar,nm,ranlib} are wrappers for the corresponding binutils program, to support Link Time Optimization (LTO)</li>
+</ul>
+</li>
+<li>include/
+<ul>
+<li>Headers of the host libraries (gmp, mpfr, mpc)</li>
+</ul>
+</li>
+<li>lib/
+<ul>
+<li>gcc/arm-buildroot-linux-uclibcgnueabihf/4.9.4/
+<ul>
+<li>crtbegin*.o, crtend*.o, object files handling constructors/destructors, linked into executables</li>
+<li>include/, headers provided by the compiler (stdarg.h, stdint.h, stdatomic.h, etc.)</li>
+<li>include-fixed/, system headers that gcc fixed up using fixincludes</li>
+<li>install-tools/, also related to the fixincludes process</li>
+<li>libgcc.a, libgcc_eh.a, libgcov.a, static variants of the gcc runtime libraries</li>
+</ul>
+</li>
+<li>ldscripts/, linker scripts provided by gcc to link programs and libraries</li>
+<li>Host version of gmp, mpfr, mpc, needed for gcc</li>
+</ul>
+</li>
+<li>libexec/
+<ul>
+<li>gcc/arm-buildroot-linux-uclibcgnueabihf/4.9.4/
+<ul>
+<li>cc1, the actual C compiler</li>
+<li>cc1plus, the actual C++ compiler</li>
+<li>collect2, program from gcc collecting initialization functions, wrapping the linker</li>
+<li>install-tools/, misc gcc related tools, not needed for the compilation process</li>
+<li>liblto_plugin.so.0.0.0, lto-wrapper, lto1, related to LTO support (outside of the scope of this talk)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>share/
+<ul>
+<li>documentation (man pages and info pages)</li>
+<li>translation files for gcc and binutils</li>
+</ul>
+</li>
+</ul>
+<h2 id="针对特定架构" class="headerLink">
+    <a href="#%e9%92%88%e5%af%b9%e7%89%b9%e5%ae%9a%e6%9e%b6%e6%9e%84" class="header-mark"></a>针对特定架构</h2><ul>
+<li>gcc 提供了几个配置时（configure-time)选项来调整特定架构/CPU 变量: <code>--with-arch, --with-cpu, --with-abi, --with-fpu</code></li>
+<li>gcc 默认为这些定义的架构/CPU 生成代码</li>
+<li>可以在运行 gcc 时使用 <code>-march, -mcpu, -mabi, -mfpu</code> 选项覆盖。</li>
+<li>但是要注意，toolchain 的一部分是为 target 构建的！
+<ul>
+<li>The gcc runtime libraries</li>
+<li>The C library, dynamic linker, and startup code</li>
+</ul>
+</li>
+<li>如果 toolchain 一开始的 target 是 ARMv7，那么指定 <code>-march=armv5te</code> 不足以让二进制文件在 ARMv5 运行。</li>
+<li>Read the gcc documentation, section Machine-dependent options to get the complete list of possible values.</li>
+</ul>
+<h2 id="abi-定义" class="headerLink">
+    <a href="#abi-%e5%ae%9a%e4%b9%89" class="header-mark"></a>ABI: 定义</h2><p>Application Binary Interface, 应用二进制接口。</p>
+<ul>
+<li>从 toolchain 的角度，ABI 定义了：
+<ul>
+<li>How function calls are made (so-called calling convention)
+<ul>
+<li>How arguments are passed: in registers (which ones?), on the stack, how 64-bits arguments are handled on 32 bits architectures</li>
+<li>How the return value is passed</li>
+</ul>
+</li>
+<li>Size of basic data types</li>
+<li>Alignment of members in structures</li>
+<li>When there is an operating system, how system calls are made</li>
+</ul>
+</li>
+<li>不同 ABI 的对象文件不能被链接到一起。</li>
+<li>一种 CPU 架构可能有无数种 ABI, ABI 只是如何使用 CPU 架构的规范。</li>
+<li>需要了解每种架构的 ABI。</li>
+</ul>
+<h2 id="abi-以-arm32-为例" class="headerLink">
+    <a href="#abi-%e4%bb%a5-arm32-%e4%b8%ba%e4%be%8b" class="header-mark"></a>ABI: 以 ARM32 为例</h2><ul>
+<li><strong>OABI</strong>: obsolete ABI. Forced the use of hard-float instructions, which required emulation of floating-point operations in the kernel. No longer supported anywhere.</li>
+<li><strong>EABI</strong>, standardized by ARM. Allows mixing hard-float code with soft-float code. Floating point arguments passed in integer registers.
+<ul>
+<li>Hard-float code: uses floating point instructions directly.</li>
+<li>Soft-float code: emulates floating point instructions using a userspace library provided by gcc</li>
+</ul>
+</li>
+<li><strong>EABIhf</strong>, also standardized by ARM. Requires a floating point unit: only hard-float code. Floating point arguments passed in floating point registers.</li>
+<li>gcc options
+<ul>
+<li>EABI soft-float: -mabi=aapcs-linux -mfloat-abi=soft</li>
+<li>EABI hard-float: -mabi=aapcs-linux -mfloat-abi=softfp</li>
+<li>EABIhf: -mabi=aapcs-linux -mfloat-abi=hard</li>
+</ul>
+</li>
+</ul>
+<h2 id="toolchain-sdk-和-build-system-的不同" class="headerLink">
+    <a href="#toolchain-sdk-%e5%92%8c-build-system-%e7%9a%84%e4%b8%8d%e5%90%8c" class="header-mark"></a>Toolchain, SDK 和 Build system 的不同</h2><ul>
+<li>Toolchain: just the compiler, binutils and C library</li>
+<li>SDK: a toolchain, plus a number (potentially large) of libraries built for the target architecture, and additional native tools helpful when building software.</li>
+<li>Build systems such as <strong>OpenEmbedded or Yocto</strong> can typically:
+<ul>
+<li>Use an existing toolchain as input, or build their own toolchain</li>
+<li>In addition to producing a root filesystem, they can also produce a SDK to allow application developers to build applications/libraries for the target.</li>
+</ul>
+</li>
+</ul>
+<h2 id="如何获取交叉编译工具链" class="headerLink">
+    <a href="#%e5%a6%82%e4%bd%95%e8%8e%b7%e5%8f%96%e4%ba%a4%e5%8f%89%e7%bc%96%e8%af%91%e5%b7%a5%e5%85%b7%e9%93%be" class="header-mark"></a>如何获取交叉编译工具链</h2><ul>
+<li>Pre-built
+<ul>
+<li>From your <strong>distribution</strong>. Ubuntu and Debian have numerous cross-compilers readily available.</li>
+<li>From various <strong>organization</strong>: Linaro provides ARM and AArch64 toolchains, Mentor provides a few free Sourcery CodeBench toolchains, Imagination provides MIPS toolchains, etc.</li>
+</ul>
+</li>
+<li>Built it yourself
+<ul>
+<li><strong>Crosstool-NG</strong>, tool specialized in building cross-compilation toolchain. By far the most configurable/versatile.</li>
+<li>Embedded Linux <strong>build systems</strong> generally all know how to build a cross-compilation toolchain: Yocto/OpenEmbedded, Buildroot, OpenWRT, etc.</li>
+</ul>
+</li>
+</ul>
+</div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-17</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/python-yield/" class="prev" rel="prev" title="Python yield"><i class="fas fa-angle-left fa-fw"></i>Python yield</a>
+            <a href="/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" class="next" rel="next" title="C&#43;&#43;函数式编程">C&#43;&#43;函数式编程<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>

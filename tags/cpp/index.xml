@@ -1,0 +1,14 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>cpp - 标签 - Zhao&#39;s blog</title>
+        <link>http://localhost:1313/tags/cpp/</link>
+        <description>cpp - 标签 - Zhao&#39;s blog</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 19 Oct 2023 11:13:00 &#43;0800</lastBuildDate><atom:link href="http://localhost:1313/tags/cpp/" rel="self" type="application/rss+xml" /><item>
+    <title>C&#43;&#43;函数式编程</title>
+    <link>http://localhost:1313/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/</link>
+    <pubDate>Thu, 19 Oct 2023 11:13:00 &#43;0800</pubDate><author>
+        <name>Zhao</name>
+    </author><guid>http://localhost:1313/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/</guid>
+    <description><![CDATA[chap 2 使用 STL 中的高阶函数 示例命令式求平均值 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 #include &lt;iostream&gt; #include &lt;vector&gt; double average_score(const std::vector&lt;int&gt;&amp; scores) { int sum = 0; for (int score : scores) { sum += score; } return sum / (double)scores.size(); } int main() { std::vector&lt;int&gt; iv{1, 2,]]></description>
+</item></channel>
+</rss>

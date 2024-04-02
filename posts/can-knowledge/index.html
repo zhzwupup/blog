@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>CAN knowledge - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="CAN knowledge" />
+<meta property="og:description" content="CAN knowledge CAN: From physical layer to application layer and beyond Figure 1: In general, CAN-based communication is described by means of the 7-layer OSI model The CAN knowledge pages provide technical information on all three CAN (Controller Area Network) data link layer generations: Classical CAN CAN FD CAN XL CAN FD Light The CAN knowledge pages also describes several CAN physical layer options. Additionally, these pages also contain technical" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/can-knowledge/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-10-20T05:10:00+08:00" />
+<meta property="article:modified_time" content="2024-01-17T19:20:39+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CAN knowledge"/>
+<meta name="twitter:description" content="CAN knowledge CAN: From physical layer to application layer and beyond Figure 1: In general, CAN-based communication is described by means of the 7-layer OSI model The CAN knowledge pages provide technical information on all three CAN (Controller Area Network) data link layer generations: Classical CAN CAN FD CAN XL CAN FD Light The CAN knowledge pages also describes several CAN physical layer options. Additionally, these pages also contain technical"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/can-knowledge/" /><link rel="prev" href="http://localhost:1313/posts/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" /><link rel="next" href="http://localhost:1313/posts/make-%E7%9A%84%E9%9A%90%E5%BC%8F%E8%A7%84%E5%88%99%E4%BD%BF%E7%94%A8%E7%9A%84%E5%8F%98%E9%87%8F/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "CAN knowledge",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/can-knowledge\/"
+        },"genre": "posts","keywords": "CAN","wordcount":  1987 ,
+        "url": "http:\/\/localhost:1313\/posts\/can-knowledge\/","datePublished": "2023-10-20T05:10:00+08:00","dateModified": "2024-01-17T19:20:39+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#can-from-physical-layer-to-application-layer-and-beyond">CAN: From physical layer to application layer and beyond</a></li>
+        <li><a href="#physics-layer-options">Physics layer options</a></li>
+        <li><a href="#can-data-link-layers-three-generations">CAN data link layers: Three generations</a></li>
+        <li><a href="#standardized-higher-layer-protocols">Standardized higher-layer protocols</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">CAN knowledge</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/"><i class="far fa-folder fa-fw"></i>嵌入式</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-10-20">2023-10-20</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-17">2024-01-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1987 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#can-from-physical-layer-to-application-layer-and-beyond">CAN: From physical layer to application layer and beyond</a></li>
+        <li><a href="#physics-layer-options">Physics layer options</a></li>
+        <li><a href="#can-data-link-layers-three-generations">CAN data link layers: Three generations</a></li>
+        <li><a href="#standardized-higher-layer-protocols">Standardized higher-layer protocols</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p><a href="https://www.can-cia.org/en/can-knowledge/" target="_blank" rel="noopener noreferrer">CAN knowledge</a></p>
+<h2 id="can-from-physical-layer-to-application-layer-and-beyond" class="headerLink">
+    <a href="#can-from-physical-layer-to-application-layer-and-beyond" class="header-mark"></a>CAN: From physical layer to application layer and beyond</h2><figure><img src="/ox-hugo/2023-10-20_04-48-04_knowledge01.png"
+         alt="Figure 1: In general, CAN-based communication is described by means of the 7-layer OSI model"/><figcaption>
+            <p><span class="figure-number">Figure 1: </span>In general, CAN-based communication is described by means of the 7-layer OSI model</p>
+        </figcaption>
+</figure>
+
+<p>The CAN knowledge pages provide technical information on all three CAN (Controller Area Network) data link layer
+generations:</p>
+<ul>
+<li><a href="https://www.can-cia.org/en/can-knowledge/can/classical-can/" target="_blank" rel="noopener noreferrer">Classical CAN</a></li>
+<li><a href="https://www.can-cia.org/en/can-knowledge/can/can-fd/" target="_blank" rel="noopener noreferrer">CAN FD</a></li>
+<li><a href="https://www.can-cia.org/en/can-knowledge/can/can-xl/" target="_blank" rel="noopener noreferrer">CAN XL</a></li>
+<li><a href="https://www.can-cia.org/en/can-knowledge/can/cia-604-can-fd-light-simplified-can-fd-data-link-layer/" target="_blank" rel="noopener noreferrer">CAN FD Light</a></li>
+</ul>
+<p>The CAN knowledge pages also describes several <a href="https://www.can-cia.org/en/can-knowledge/can/systemdesign-can-physicallayer/" target="_blank" rel="noopener noreferrer">CAN physical layer options</a>. Additionally, these pages also contain technical descriptions about classic <a href="https://www.can-cia.org/en/canopen/" target="_blank" rel="noopener noreferrer">CANopen</a> and <a href="https://www.can-cia.org/en/can-knowledge/canopen-fd/canopen-fd-the-art-of-embedded-networking/" target="_blank" rel="noopener noreferrer">CANopen FD</a> as well as other standardized CAN-based higher-layers.</p>
+<p>According to the Open System Interconnection (OSI) seven-layer and the CAN lower-layer model, the CAN lower layers
+cover some functions of the transport layer (e.g. automatic retransmission of faulty frames), the data link layer
+(DLL), and the physical coding sub-layer (PCS) as well as the physical medium attachment (PMA) sub-layer. The
+medium-dependent interface sub-layer is generally application-specific.</p>
+<figure><img src="/ox-hugo/2023-10-20_04-44-46_csm_figure01_can-knowledge_a674d8e63e.png"
+         alt="Figure 2: Typical implementation of the CAN lower layers as specified in the ISO 11898 series"/><figcaption>
+            <p><span class="figure-number">Figure 2: </span>Typical implementation of the CAN lower layers as specified in the ISO 11898 series</p>
+        </figcaption>
+</figure>
+
+<p>The other layers are usually referenced as higher-layer protocols (HLP). Often, the CAN-based application layer
+approaches include functional elements of other higher layers (e.g. session, presentation, transport, or network
+layers), too. Some of them are accompanied by parameter (data) specifications, which are not in the scope of the OSI
+model.</p>
+<p>Higher-layer protocols described in the CAN knowledge pages include, in particular, the classic CANopen application
+layer (CiA 301) and the CANopen FD application layer (CiA 1301) as well as the related device, interface, and
+application profiles. Additionally, some basic information on other CAN-based higher-layer protocols such as
+Devicenet, Isobus (ISO 11783), ISO 11992 series, and SAE J1939 series) is provided.</p>
+<h2 id="physics-layer-options" class="headerLink">
+    <a href="#physics-layer-options" class="header-mark"></a>Physics layer options</h2><figure><img src="/ox-hugo/2023-10-20_04-54-08_csm_figure01_can-knowledge_physical-layer_8285753045.png"
+         alt="Figure 3: The CAN PMA sub-layer is normally implemented in CAN transceiver chips as specified in ISO 11898-2 and in CiA 601-4 respectively CiA 610-3 when featuring signal improvement capability"/><figcaption>
+            <p><span class="figure-number">Figure 3: </span>The CAN PMA sub-layer is normally implemented in CAN transceiver chips as specified in ISO 11898-2 and in CiA 601-4 respectively CiA 610-3 when featuring signal improvement capability</p>
+        </figcaption>
+</figure>
+
+<p>There are several CAN physical media attachment (PMA) sub-layers standardized. They are normally implemented by
+means of transceivers. Most common is the CAN high-speed transceiver. This includes variants supporting bit-rates up
+to 1 Mbit/s and those providing tighter symmetry features suitable for higher bit-rates depending on the network
+design (CAN FD transceiver). The CAN SIC (signal improvement capability) transceiver are able to suppress ringing on
+the network lines. They are specified in CiA 601-4 and CiA 610-3 (supporting PWM coding/decoding).</p>
+<p>Most of the CAN physical layer options use twisted-pair copper cable with common ground usually realizes the
+physical transmission. Of course, all connected nodes need to support the same bit-rate(s) and the same bit-timing
+settings.</p>
+<p>The physical medium attachment (PMA) options include:</p>
+<ul>
+<li><a href="https://www.can-cia.org/en/can-knowledge/can/high-speed-transmission/" target="_blank" rel="noopener noreferrer">CAN high-speed transceiver</a> with optional low-power and optional selective wake-up capability (<a href="https://www.iso.org/standard/67244.html" target="_blank" rel="noopener noreferrer">ISO 11898-2:2016</a>)</li>
+<li>CAN SIC (signal improvement capability) transceiver (<a href="https://www.can-cia.org/en/can-knowledge/can/cia601/" target="_blank" rel="noopener noreferrer">CiA 601-4</a>)</li>
+<li>CAN XL SIC transceiver (CiA 610-3)</li>
+<li>CAN low-power/fault-tolerant transceiver (<a href="https://www.iso.org/standard/36055.html" target="_blank" rel="noopener noreferrer">ISO 11898-3:2006</a>)</li>
+<li>CAN truck/trailer transceiver (<a href="https://www.iso.org/standard/68376.html" target="_blank" rel="noopener noreferrer">ISO 11992-1</a>)</li>
+<li>Single-wire CAN (SWC) transceiver (<a href="https://www.can-cia.org/en/can-knowledge/can/sae-j2411-single-wire/" target="_blank" rel="noopener noreferrer">SAE J2411</a>) – not more recommended for new designs</li>
+</ul>
+<p>Most common is a high-speed transmission up to 1 Mbit/s. This is realized by means of CAN high-speed transceivers
+(term recommended by CiA). These transceivers are optionally available with low-power capability and selective
+wake-up functionality for partial networking. They are all standardized in ISO 11898-2:2016. Nowadays, this standard
+includes the legacy ISO 11898-5 and ISO 11898-6 norms, too.</p>
+<p>The robustness of high-speed CAN networks is excellent. In-vehicle networks often use star-topologies, sometimes
+with multiple stars. In some applications, hybrid topologies are implemented, combining line and star topology
+elements. However, the most robust topology is a bus-line with very short stubs.</p>
+<p>For bit-rates higher than 1 Mbit/s as used in the CAN FD data-phase, the CAN high-speed transceivers with improved
+symmetry features are used. They are also standardized in ISO 11898-2:2016. There are two versions specified: one
+with improved parameters suitable for bit-rates up 2 Mbit/s and another one with even better parameters suitable for
+bit-rates up to 5 Mbit/s. Of course, the achievable bit-rate depends highly on the physical network design. This
+includes topology, selected cables and connectors, etc. Additionally, CiA has specified the CAN SIC (signal
+improvement capability) transceivers, which can suppress ringing (CiA 601-4). This gives network designers more
+margin for asymmetries, which can be caused by not optimized network topologies. The CAN SIC XL transceivers
+featuring an optional PWM (pulse-width modulation) coding are specified in CiA 610-3. They support bit-rates of up
+to 10 Mbit/s and more depending on the network topology and selected electromechanical components (e.g. cables,
+connectors, and additional circuitry).</p>
+<p>The other physical layer standard used in the automotive industry is ISO 11898-3, a so-called fault-tolerant,
+low-power transmission. It is not widely used in other industries, and it is limited to 125 kbit/s. An
+application-specific physical layer is standardized in ISO 11992-1, which is also limited to 125 kbit/s. It is used
+in truck-trailer point-to-point networks. The single-wire transmission as specified in SAE J2411 has some
+restrictions regarding the robustness and the transmission rate. It is not widely implemented.</p>
+<p>Other medias are also in use: Fiber-optical and power-line transmissions, for example. However, their specifications
+are proprietary.</p>
+<h2 id="can-data-link-layers-three-generations" class="headerLink">
+    <a href="#can-data-link-layers-three-generations" class="header-mark"></a>CAN data link layers: Three generations</h2><p>There are three CAN data link layer generations:</p>
+<ul>
+<li><a href="https://www.can-cia.org/en/can-knowledge/can/can-data-link-layers/" target="_blank" rel="noopener noreferrer">Classical CAN data link layer</a> (1<sup>st</sup> generation)</li>
+<li><a href="https://www.can-cia.org/en/can-knowledge/can/can-fd/" target="_blank" rel="noopener noreferrer">CAN FD data link layer</a> (2<sup>nd</sup> generation)</li>
+<li><a href="https://www.can-cia.org/en/can-knowledge/can/can-xl/" target="_blank" rel="noopener noreferrer">CAN XL data link layer</a> (3<sup>rd</sup> generation)</li>
+</ul>
+<p>The Classical CAN and the CAN FD protocols are internationally standardized in ISO 11898-1. The CAN XL protocol is
+specified in CiA 610-1.</p>
+<figure><img src="/ox-hugo/2023-10-20_04-57-51_csm_figure01_can-knowledge_data-link-layer_8edde3ff3f.png"
+         alt="Figure 4: The CAN data link layer is standardized in ISO 118981-1 (Classical CAN and CAN FD) as well as in CiA 610-1 (CAN XL)"/><figcaption>
+            <p><span class="figure-number">Figure 4: </span>The CAN data link layer is standardized in ISO 118981-1 (Classical CAN and CAN FD) as well as in CiA 610-1 (CAN XL)</p>
+        </figcaption>
+</figure>
+
+<p>CAN is a very reliable producer/consumer serial bus system with multi-drop capabilities. The network arbitration
+method is the same for all CAN generations: Classical CAN, CAN FD, and CAN XL. The CAN frames are broadcasted. This
+means every node is able to consume any frame produced by any other node in the CAN network.</p>
+<p>All three generations use the same non-destructive bus-arbitration method. They support standardized data frame
+formats as well as error and overload frames. Remote frames are only featured by Classical CAN.</p>
+<p>Originally, CAN was developed for use as an in-vehicle network in passenger cars, nowadays CAN is used in many other
+industries. This includes applications in any kind of transportation system (rail vehicle, aircraft, marine, etc.),
+in industrial machine control systems, in home and building automation (e.g. HVAC, elevators), in mobile machines
+(construction and agriculture equipment), in medical devices and laboratory automation, as well as in many other
+embedded and deeply embedded applications. Each year, more than two billion CAN nodes are sold. The price for CAN
+protocol controllers is very reasonable.</p>
+<p>In the beginning, there was only the data link layer protocol, what we today name Classical CAN. Introduced by Bosch
+as CAN 2.0 A/B, it has been internationally standardized in the ISO 11898 series since 1993. CiA doesn’t use the
+term CAN 2.0 anymore: we name it Classical CAN.</p>
+<p>In 2012, Bosch and other CAN experts improved the CAN protocol to what is known as the CAN FD protocol. The
+Classical CAN and CAN FD protocols are by some means backward compatible: Any CAN FD-compliant node understands
+Classical CAN frames. However, legacy Classical CAN nodes not supporting CAN FD destroy a received CAN FD frame by
+sending an error frame.</p>
+<p>Both protocols, Classical CAN and CAN FD are internationally standardized in ISO 11898-1:2015 and feature a high
+reliability. All single-bit failures are detectable. Multi-bit failures are found with a very high probability. One
+of the unique features is the fault confinement, which provides a network-wide data consistency.</p>
+<p>The third CAN protocol generation, called CAN XL, has been developed by CiA technical groups. It provides a lot of
+new features including the separation of bus access arbitration (11-bit priority ID) and data frame content
+indication (32-bit acceptance field) as well as layer management information (e.g. SDT field). The data field length
+ranges from 1 byte to 2048 byte. The CAN XL data link layer is specified in CiA 610-1.</p>
+<h2 id="standardized-higher-layer-protocols" class="headerLink">
+    <a href="#standardized-higher-layer-protocols" class="header-mark"></a>Standardized higher-layer protocols</h2><figure><img src="/ox-hugo/2023-10-20_05-00-06_csm_01_higher-layer-protocols_hlp_ac3c3f0a4d.jpg"
+         alt="Figure 5: CANopen is the most generic higher-layer approach pre-developed within a European research project and handed over to CiA in 1994 for further development and maintenance"/><figcaption>
+            <p><span class="figure-number">Figure 5: </span>CANopen is the most generic higher-layer approach pre-developed within a European research project and handed over to CiA in 1994 for further development and maintenance</p>
+        </figcaption>
+</figure>
+
+<p>Most of the standardized CAN-based higher-layer protocol stacks implement the application layer and the transport
+layer also comprising some features of the presentation, session, and network layers.</p>
+<p>The most important standardized CAN-based higher-layer protocols include:</p>
+<ul>
+<li><a href="https://www.can-cia.org/en/canopen/" target="_blank" rel="noopener noreferrer">CANopen (CiA 301)</a> based on Classical CAN for general embedded real-time control</li>
+<li><a href="https://www.can-cia.org/en/can-knowledge/canopen-fd/canopen-fd-the-art-of-embedded-networking/" target="_blank" rel="noopener noreferrer">CANopen FD</a> (CiA 1301) based on CAN FD and CAN XL for embedded real-time control with advanced features</li>
+<li><a href="https://www.can-cia.org/en/can-knowledge/j1939/j1939-profile-family/" target="_blank" rel="noopener noreferrer">J1939 application profiles</a> based on Classical CAN and CAN FD for different domains</li>
+<li><a href="https://www.can-cia.org/en/can-knowledge/hlp/devicenet/" target="_blank" rel="noopener noreferrer">Devicenet</a> profile based on Classical CAN for factory automation</li>
+</ul>
+<p>The most generic higher-layer approach is CANopen. It comprises the CiA 301 application layer standardized,
+internationally standardized in EN 50325-4, as well as several device, interface, and application profiles (CiA 4xx
+series). There are also other protocol specifications for additional communication functions (CiA 3xx series).
+CANopen is used in many embedded and deeply embedded control applications.</p>
+<p>To provide the broad range of CANopen users the possibility of making use of the advantages offered by CAN FD, CiA
+has released the CiA 1301 <a href="https://www.can-cia.org/en/can-knowledge/canopen-fd/canopen-fd-the-art-of-embedded-networking/" target="_blank" rel="noopener noreferrer">CANopen FD</a> specification. Due to lengthened <a href="https://www.can-cia.org/en/can-knowledge/canopen-fd/pdo-protocol/" target="_blank" rel="noopener noreferrer">PDO</a>s, CANopen FD enables the transmission of
+more complex process data together with further application data, e.g. relevant for condition monitoring or
+authentication purposes. The newly introduced Universal Service Data Object (USDO) enables meeting all communication
+requirements, todays and future embedded networks may be faced with. The <a href="https://www.can-cia.org/en/can-knowledge/canopen-fd/usdo-protocol/" target="_blank" rel="noopener noreferrer">USDO</a> enables accessing any CANopen FD
+device by read- and write-access. In unicast or broadcast, any size of data can be transferred in a way that is
+optimized with regard to the size of the transferred data, e.g. by means of expedited, segmented or bulk transfer.
+The updated extended EMCY write protocol supports comprehensive diagnosis, e.g. by providing more detailed error
+information and a time stamp. Especially with regard to the CANopen FD network-management-related services and the
+internal CANopen FD device architecture, CANopen FD keeps the attributes of CANopen, so that users of CANopen can
+easily transfer from classic CANopen to CANopen FD.</p>
+<p>The family of J1939-based application profiles is another higher-layer approach based on CAN lower layers. The
+original J1939 specifications were designed for in-vehicle networks in trucks and buses. The international Society
+of Automotive Engineers (SAE) develops and maintains these recommended practices. This specification series includes
+the J1939/21 document specifying the mapping to Classical CAN and the J1939/22 document for CAN FD mapping.</p>
+<p>The internationally standardized ISO 11783 series (also known as Isobus), one of the J1939 derivatives, is dedicated
+for the communication between agriculture tractors and implements such as harvesters. It can also be used for
+forestry mobile machines. The IEC 61162-3 (also known as NMEA 2000) is another J1939 derivate; it is optimized for
+CAN-based marine navigation networks. The ISO 11992 series standardizes the communication between trucks and
+trailers. This J1939 derivate is a base for the European regulation of towed vehicles. Also, the ISO 16844 series
+standardizing tachographs uses J1939 messages for some purposes.</p>
+<p>DIN has standardized the body builder network profile for commercial vehicles (DIN 4630). It can be mapped to J1939
+or classic CANopen. This standard specifies also a generic gateway to in-vehicle networks, which is extended by DIN
+14704 for fire-fighting specific functions. There is also a CANopen-based body builder sub-network for fire-fighting
+equipment standardized (DIN 14700).</p>
+<p>In the passenger car industry, application layers are in general proprietary. Exceptions are the CAN transport layer
+and the diagnostic services, which are internationally standardized in ISO 15765-2 (transport and network layer)
+respectively in the ISO 14229-2 (unified diagnostic services (UDS) on CAN). Another exception is an open network for
+add-on devices, which is specified in the <a href="https://www.can-cia.org/en/can-knowledge/canopen/cia447/" target="_blank" rel="noopener noreferrer">CiA 447</a> CANopen application profile series.</p>
+<p><a href="https://www.can-cia.org/en/can-knowledge/hlp/devicenet/" target="_blank" rel="noopener noreferrer">Devicenet</a> is a further CAN-based higher-layer protocol. It was originally developed with special regard to factory
+automation. It comprises a broad set of profile specifications. Devicenet is internationally standardized in IEC
+62026-3. The ODVA nonprofit association maintains this standard and the related profiles.</p>
+</div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-17</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/can/">CAN</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/can-%E6%94%B6%E5%8F%91%E6%89%A7%E8%A1%8C%E5%92%8C%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" class="prev" rel="prev" title="CAN 收发执行和错误处理"><i class="fas fa-angle-left fa-fw"></i>CAN 收发执行和错误处理</a>
+            <a href="/posts/make-%E7%9A%84%E9%9A%90%E5%BC%8F%E8%A7%84%E5%88%99%E4%BD%BF%E7%94%A8%E7%9A%84%E5%8F%98%E9%87%8F/" class="next" rel="next" title="make 的隐式规则使用的变量">make 的隐式规则使用的变量<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>

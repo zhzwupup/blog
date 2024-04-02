@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <title>Linux Kernel 进程管理 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="Linux Kernel 进程管理" />
+<meta property="og:description" content="进程描述符内核把进程的列表存放在叫做任务队列（task list）的双向循环链表中。链表中的每一项都是类型为 task_struct、称为进程描" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/posts/linux-kernel-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-01-19T00:00:00+08:00" />
+<meta property="article:modified_time" content="2024-01-19T18:58:20+08:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Linux Kernel 进程管理"/>
+<meta name="twitter:description" content="进程描述符内核把进程的列表存放在叫做任务队列（task list）的双向循环链表中。链表中的每一项都是类型为 task_struct、称为进程描"/>
+<meta name="application-name" content="Zhao&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="Zhao&#39;s blog">
+
+<meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/linux-kernel-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/" /><link rel="prev" href="http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%BA%8C-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/" /><link rel="next" href="http://localhost:1313/posts/c-c-plus-plus-%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%89%A7%E8%A1%8C/" />
+<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Linux Kernel 进程管理",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/localhost:1313\/posts\/linux-kernel-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86\/"
+        },"genre": "posts","wordcount":  3851 ,
+        "url": "http:\/\/localhost:1313\/posts\/linux-kernel-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86\/","datePublished": "2024-01-19T00:00:00+08:00","dateModified": "2024-01-19T18:58:20+08:00","publisher": {
+            "@type": "Organization",
+            "name": "Zhao"},"author": {
+                "@type": "Person",
+                "name": "Zhao"
+            },"description": ""
+    }
+    </script><script src="//instant.page/5.2.0" defer type="module" integrity="sha384-jnZyxPjiipYXnSU0ygqeac2q7CVYMbh84q0uHVRRxEtvFPiQYbXWUorga2aqZJ0z"></script>
+</head>
+
+<body header-desktop="" header-mobile=""><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme); document.documentElement.style.setProperty('color-scheme', theme === 'light' ? 'light' : 'dark'); window.theme = theme;   window.isDark = window.theme !== 'light' }
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('' === 'light' || '' === 'dark' || '' === 'black') setTheme(''), saveTheme(''); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let metaColors = {'light': '#f8f8f8','dark': '#252627','black': '#000000'}
+        getMeta('theme-color').content = metaColors[document.body.getAttribute('theme')];
+        window.switchThemeEventSet = new Set()
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content always-active" id="toc-content-auto"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#进程描述符">进程描述符</a>
+          <ul>
+            <li><a href="#分配进程描述符">分配进程描述符</a></li>
+            <li><a href="#进程描述符的存放">进程描述符的存放</a></li>
+            <li><a href="#进程上下文">进程上下文</a></li>
+          </ul>
+        </li>
+        <li><a href="#进程创建">进程创建</a>
+          <ul>
+            <li><a href="#写时拷贝">写时拷贝</a></li>
+            <li><a href="#fork">fork()</a></li>
+          </ul>
+        </li>
+        <li><a href="#linux-中的线程">Linux 中的线程</a>
+          <ul>
+            <li><a href="#创建线程">创建线程</a></li>
+            <li><a href="#内核线程">内核线程</a></li>
+          </ul>
+        </li>
+        <li><a href="#进程终结">进程终结</a>
+          <ul>
+            <li><a href="#删除进程描述符">删除进程描述符</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Linux Kernel 进程管理</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
+                </span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2024-01-19">2024-01-19</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-19">2024-01-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 3851 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 8 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#进程描述符">进程描述符</a>
+          <ul>
+            <li><a href="#分配进程描述符">分配进程描述符</a></li>
+            <li><a href="#进程描述符的存放">进程描述符的存放</a></li>
+            <li><a href="#进程上下文">进程上下文</a></li>
+          </ul>
+        </li>
+        <li><a href="#进程创建">进程创建</a>
+          <ul>
+            <li><a href="#写时拷贝">写时拷贝</a></li>
+            <li><a href="#fork">fork()</a></li>
+          </ul>
+        </li>
+        <li><a href="#linux-中的线程">Linux 中的线程</a>
+          <ul>
+            <li><a href="#创建线程">创建线程</a></li>
+            <li><a href="#内核线程">内核线程</a></li>
+          </ul>
+        </li>
+        <li><a href="#进程终结">进程终结</a>
+          <ul>
+            <li><a href="#删除进程描述符">删除进程描述符</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="进程描述符" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e6%8f%8f%e8%bf%b0%e7%ac%a6" class="header-mark"></a>进程描述符</h2><p>内核把进程的列表存放在叫做任务队列（task list）的双向循环链表中。链表中的每一项都是类型为 task_struct、称为进程描述符（process descriptor）的结构，该结构定义在 &lt;linux/sched.h&gt; 文件中。进程描述符中包含一个具体进程的所有信息：打开的文件，进程的地址空间，挂起的信号，进程的状态……</p>
+<h3 id="分配进程描述符" class="headerLink">
+    <a href="#%e5%88%86%e9%85%8d%e8%bf%9b%e7%a8%8b%e6%8f%8f%e8%bf%b0%e7%ac%a6" class="header-mark"></a>分配进程描述符</h3><p>Linux 通过 slab 分配器分配 task_struct 结构，这样能达到对象复用和缓存着色（cache coloring）的目的。</p>
+<p>在 2.6 以前的内核中，各个进程的 task_struct 存放在它们内核栈的尾端这样做是为了让那些像 x86 那样寄存器较少的硬件体系结构只要通过栈指针就能计算出它的位置，而避免使用额外的寄存器专门记录。</p>
+<p>由于现在用 slab 分配器动态生成 task_struct，所以只需在栈底（对于向下增长的栈来说）或栈顶（对于向上增长的栈来说）创建一个新的结构 struct thread_info。</p>
+<p>每个任务的 thread_info 结构在它的内核栈的尾端分配。结构中 task 字段存放的是指向该任务实际 task_struct 的指针。</p>
+<h3 id="进程描述符的存放" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e6%8f%8f%e8%bf%b0%e7%ac%a6%e7%9a%84%e5%ad%98%e6%94%be" class="header-mark"></a>进程描述符的存放</h3><p>内核通过一个唯一的进程标识值（process identification value）或 PID 来标识每个进程。PID 是一个数，表示为 pid_t 的隐含类型（隐含类型指数据类型的物理表示是未知的或不相关的），实际上就是一个 int 类型。内核把每个进程的 PID 存放在它们各自的进程描述符中。</p>
+<p>在内核中，访问任务通常需要获得指向其 task_struct 的指针。实际上，内核中大部分处理进程的代码都是直接通过 task_struct 进行的。因此，通过 current 宏查找到当前正在运行进程的进程描述符的速度就显得尤为重要。硬件体系结构不同，该宏的实现也不同，它必须对专门的硬件体系结构做处理。有的硬件体系结构可以拿出一个专门寄存器来存放指向当前进程 task_struct 的指针，用于加快访问速度。像 x86 这样的体系结构（寄存器不富余），就只能在内核栈的尾端创建 thread_info 结构，通过计算偏移间接地查找 task_struct 结构。</p>
+<h3 id="进程上下文" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e4%b8%8a%e4%b8%8b%e6%96%87" class="header-mark"></a>进程上下文</h3><p>可执行程序代码是进程的重要组成部分。这些代码从一个可执行文件载入到进程的地址空间执行。一般程序在用户空间执行。当一个程序执行了系统调用或出发了某个异常，它就陷入了内核空间。此时，我们称内核“代表进程执行“并处于进程上下文中。在此上下文中 current 宏是有效的。除非在此间隙有更高优先级的进程需要执行并由调度器做出了相应调整，否则在内核退出的时候，程序恢复在用户空间会继续执行。</p>
+<p>系统调用和异常处理程序是对内核明确定义的接口。进程只有通过这些接口才能陷入内核执行——对内核的所有访问都必须通过这些接口。</p>
+<h2 id="进程创建" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e5%88%9b%e5%bb%ba" class="header-mark"></a>进程创建</h2><p>fork() 通过拷贝当前进程创建一个子进程。子进程与父进程的区别仅仅再与 PID（每个进程唯一）、PPID（父进程的进程号，子进程将其设置为被拷贝进程的 PID）和某些资源统计量（例如，挂起的信号，它没有必要被继承）。
+exec() 函数负责读取可执行文件并将其载入地址空间开始运行。</p>
+<h3 id="写时拷贝" class="headerLink">
+    <a href="#%e5%86%99%e6%97%b6%e6%8b%b7%e8%b4%9d" class="header-mark"></a>写时拷贝</h3><p>fork() 并不复制整个进程地址空间，而是让父进程和子进程共享同一个拷贝。只有在需要写入的时候，数据才会被复制，从而使各个进程拥有各自的拷贝。（如果在 fork() 后立即调用 exec(), 就无需复制了）。</p>
+<p>fork() 的实际开销就是复制父进程的页表以及给子进程创建唯一的进程描述符。在一般情况下，进程创建后都会马上运行一个可执行文件，这种优化可以避免拷贝大量根本就不会被使用的数据。</p>
+<h3 id="fork" class="headerLink">
+    <a href="#fork" class="header-mark"></a>fork()</h3><p>Linux 通过 clone() 系统调用实现 fork()。这个调用通过一系列的参数标志来指明父、子进程需要共享的资源 fork(), vfork() 和 __clone() 库函数都根据各自需要的参数标志去调用 clone()，然后由 clone() 去调用 do_fork()。</p>
+<p>do_fork() 完成了创建中的大部分工作，它的定义在 kernel/fork.c 中。该函数调用 copy_process() 函数，然后让进程开始运行。copy_process() 函数完成的工作：</p>
+<ol>
+<li>调用 dup_task_struct() 为新进程创建一个内核栈、thread_info 结构和 task_struct,这些值与当前进程的值相同。此时，子进程和父进程的描述符是完全相同的。</li>
+<li>检查并确保新创建这个子进程后，当前用户所拥有的进程数目没有超出给它分配的资源的限制。</li>
+<li>子进程着手使自己与父进程区别开来。进程描述符内的许多成员都要被清 0 或设为初始值。那些不是继承而来的进程描述符成员，服药是统计信息。task_struct 中的大多数数据都依然未被修改。</li>
+<li>子进程的状态被设置为 TASK_UNINTERRUPTIBLE,以保证它不会投入运行。</li>
+<li>copy_process() 调用 copy_flags() 以更新 task_struct 的 flags 成员。表明进程是否拥有超级用户权限的 PF_SUPERRIV 标志被清 0。表明进程还没有调用 exec() 函数的 PF_FORKNONEXEC 标志被设置。</li>
+<li>调用 alloc_pid() 为新进程分配一个有效的 PID。</li>
+<li>根据传递给 clone() 的参数标志，copy_process() 拷贝或共享打开的文件、文件系统信息、信号处理函数、进程地址空间和命名空间等。在一般情况下，这些资源会被给定进程的所有线程共享；否则，这些资源对每个进程是不同的，因此被拷贝到这里。</li>
+<li>最后，copy_process() 函数做扫尾工作并返回一个指向子进程的指针。</li>
+</ol>
+<p>再回到 do_fork() 函数，如果 copy_process() 函数成功返回，新创建的子进程被唤醒并让其投入运行。内核有意选择子进程首先执行，因为一般就子进程都会马上调用 exec() 函数，这样可以避免写时拷贝的额外开销，如果父进程首先执行的话，有可能会开始向地址空间写入。</p>
+<h2 id="linux-中的线程" class="headerLink">
+    <a href="#linux-%e4%b8%ad%e7%9a%84%e7%ba%bf%e7%a8%8b" class="header-mark"></a>Linux 中的线程</h2><p>从内核的角度来说，Linux 并没有线程的概念。Linux 把所有的线程都当作进程来实现。内核并没有准备特别的调度算法或定义特别的数据结构来表征线程。相反，线程仅仅被视为一个与其他进程共享某些资源的进程。每个线程都拥有唯一隶属于自己的 task_struct,所以在内核中，它看起来就像是一个普通的进程（只是线程和其他一些进程共享某些资源，如地址空间）。</p>
+<h3 id="创建线程" class="headerLink">
+    <a href="#%e5%88%9b%e5%bb%ba%e7%ba%bf%e7%a8%8b" class="header-mark"></a>创建线程</h3><p>线程的创建和普通进程的创建类似，只不过在调用 clone() 的时候需要传递一些参数标志来知名需要共享的资源：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, 0);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>上面的代码产生的结果和调用 fork() 差不多，只是父子俩共享地址空间、文件系统资源、文件描述符和信号处理程序，换个说法就是，新建的进程和它的父进程就是流行的所谓线程。</p>
+<p>对比一下，一个普通的 fork() 的实现是：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">clone(SIGCHLD, 0);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>传递给 clone() 的参数标志决定了新创建进程的行为方式和父子进程之间共享的资源种类。</p>
+<h3 id="内核线程" class="headerLink">
+    <a href="#%e5%86%85%e6%a0%b8%e7%ba%bf%e7%a8%8b" class="header-mark"></a>内核线程</h3><p>内核经常需要在后台执行一些操作。这种任务可以通过内核线程（kernel thread）完成。内核线程是独立运行在内核空间的标准进程。内核线程与普通的进程间的区别再与内核线程没有独立的地址空间（实际上指向地址空间的 mm 指针被设置为 NULL）。它们只在内核空间运行，从来不切换到用户空间去。内核线程和普通进程一样，可以被调度，也可以被抢占。</p>
+<h2 id="进程终结" class="headerLink">
+    <a href="#%e8%bf%9b%e7%a8%8b%e7%bb%88%e7%bb%93" class="header-mark"></a>进程终结</h2><p>当一个进程终结时，内核必须释放它所占有的资源并通知父进程。</p>
+<p>一般来说，进程的析构是自身引起的。它发生在进程调用 exit() 系统调用时，既可以显式地调用这个系统调用，也可能隐式地从某个程序的主函数返回（C语言编译器会在 main() 函数的返回点后面放置调用 exit() 的代码）。当进程接收到它既不能处理也不能忽略的信号或异常时，它还可能被动地终结。不管进程是怎么终结的，该任务大部分都要靠 do_exit() （定义于 kernel/exit.c ）来完成，它要做下面这些工作：</p>
+<ol>
+<li>将 task_struct 中的标志成员设置为 PF_EXITING。</li>
+<li>调用 del_timer_sync() 删除任一内核定时器。根据返回的结果，它确保没有定时器在排队，也没有定时器处理程序在运行。</li>
+<li>如果 BSD 的进程记账功能是开启的，do_exit() 调用 acct_update_integrals() 来输出记账信息。</li>
+<li>然后调用 exit_mm() 函数释放进程占用的 mm_struct，如果没有别的进程使用它们（也就是说，这个地址空间没有被共享），就彻底释放它们。</li>
+<li>接下来调用 sem_exit() 函数。如果进程排队等候 IPC 信号，它则离开队列。</li>
+<li>调用 exit_files() 和 exit_fs()，以分别递减文件描述符、文件系统数据的引用计数。如果其中某个引用计数的数值降为 0,那么就代表没有进程在使用相应的资源，此时可以释放。</li>
+<li>接着把存放在 task_struct 的 exit_code 成员中的任务退出代码置为由 exit() 提供的推出代码，或者去完成任何其他由内核机制规定的退出动作。退出代码存放在这里供父进程随时检索。</li>
+<li>调用 exit_notify() 向父进程发送信号，给子进程重新找养父，养父为线程组中的其他线程或者为 init 进程，并把进程状态（存放在 task_struct 结构的 exit_state 中）设成 EXIT_ZOMBIE。</li>
+<li>do_exit() 调用 schedule() 切换到新的进程。因为处于 EXIT_ZOMBIE 状态的进程不会再被调度，所以这是进程所执行的最后一段代码。do_exit() 永不返回。</li>
+</ol>
+<p>至此，与进程相关联的所有资源都被释放掉了。进程不可运行（也没有地址空间让它运行）并处于 EXIT_ZOMBIE 退出状态。它所占用的所有内存就是内核栈、thread_info 结构和 task_struct 结构。此时进程存在的唯一目的就是向它的父进程提供信息。父进程检索到信息后，或者通知内核不关注这些信息后，由进程所持有的剩余内存被释放，归还给系统使用。</p>
+<h3 id="删除进程描述符" class="headerLink">
+    <a href="#%e5%88%a0%e9%99%a4%e8%bf%9b%e7%a8%8b%e6%8f%8f%e8%bf%b0%e7%ac%a6" class="header-mark"></a>删除进程描述符</h3><p>在调用了 do_exit() 之后，进程已经僵死不能再运行，但是系统还保留了它的进程描述符。这样可以让系统在子进程终结后仍能获得它的信息。进程终结时所需的清理工作和进程描述符的删除被分开执行。</p>
+<p>wait() 这一族函数都是通过唯一（但是很复杂）的一个系统调用 wait4() 来实现的。它的标准动作是挂起调用它的进程，直到其中的一个子进程退出，此时函数会返回子进程的 PID。此外，调用该函数时提供的指针会包含子进程退出时的退出代码。</p>
+<p>当最终需要释放进程描述符时， release_task() 会被调用，用以完成一下工作：</p>
+<ol>
+<li>调用 __exit_signal()，该函数调用 _unhash_process(), 后者又调用 detach_pid() 从 pidhash 上删除该进程，同时也要从任务列表中删除该进程。</li>
+<li>_exit_signal() 释放目前僵死进程所使用的所有剩余资源，并进行最终统计和记录。</li>
+<li>如果这个进程是线程组最后一个进程，并且领头进程已经死掉，那么 release_task() 就要通知僵死的领头进程的父进程。</li>
+<li>release_task() 调用 put_task_struct() 释放进程内核栈和 thread_info 结构所占的页，并释放 task_struct 所占的 slab 高速缓存。</li>
+</ol>
+<p>至此，进程描述符和所有进程独享的资源就全部释放掉了。</p>
+</div>
+
+        <div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2024-01-19</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share"></div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%BA%8C-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/" class="prev" rel="prev" title="LevelDb 源码阅读 二：基本原理"><i class="fas fa-angle-left fa-fw"></i>LevelDb 源码阅读 二：基本原理</a>
+            <a href="/posts/c-c-plus-plus-%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%89%A7%E8%A1%8C/" class="next" rel="next" title="C/C&#43;&#43;程序的执行">C/C&#43;&#43;程序的执行<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+</article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">
+                    由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+            <div class="footer-line"></div>
+            <div class="footer-line">
+            </div>
+        </div></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top-button" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+</body>
+
+</html>
