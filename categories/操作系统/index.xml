@@ -1,14 +1,14 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
         <title>操作系统 - 分类 - Zhao&#39;s blog</title>
-        <link>http://localhost:1313/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</link>
+        <link>https://zhzwupup.github.io/blog/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</link>
         <description>操作系统 - 分类 - Zhao&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 19 Oct 2023 10:28:00 &#43;0800</lastBuildDate><atom:link href="http://localhost:1313/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 19 Oct 2023 10:28:00 &#43;0800</lastBuildDate><atom:link href="https://zhzwupup.github.io/blog/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="self" type="application/rss+xml" /><item>
     <title>操作系统</title>
-    <link>http://localhost:1313/posts/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</link>
+    <link>https://zhzwupup.github.io/blog/posts/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</link>
     <pubDate>Thu, 19 Oct 2023 10:28:00 &#43;0800</pubDate><author>
         <name>Zhao</name>
-    </author><guid>http://localhost:1313/posts/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</guid>
+    </author><guid>https://zhzwupup.github.io/blog/posts/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</guid>
     <description><![CDATA[CPU 虚拟化 (chap 4) 进程 进程的机器状态： 内存 + 寄存器 进程 Api 创建 fork 销毁 等待 其他控制（暂停、恢复等） 状态（获取进程状态信息） 进程创建的细节 操作系统从磁盘]]></description>
 </item></channel>
 </rss>

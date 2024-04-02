@@ -10,7 +10,7 @@
     <title>C&#43;&#43;函数式编程 - Zhao&#39;s blog</title><meta name="Description" content=""><meta property="og:title" content="C&#43;&#43;函数式编程" />
 <meta property="og:description" content="chap 2 使用 STL 中的高阶函数 示例命令式求平均值 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 #include &lt;iostream&gt; #include &lt;vector&gt; double average_score(const std::vector&lt;int&gt;&amp; scores) { int sum = 0; for (int score : scores) { sum &#43;= score; } return sum / (double)scores.size(); } int main() { std::vector&lt;int&gt; iv{1, 2," />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://localhost:1313/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" /><meta property="article:section" content="posts" />
+<meta property="og:url" content="https://zhzwupup.github.io/blog/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2023-10-19T11:13:00+08:00" />
 <meta property="article:modified_time" content="2024-01-24T23:48:57+08:00" />
 <meta name="twitter:card" content="summary"/>
@@ -21,10 +21,10 @@
 
 <meta name="theme-color" content="#f8f8f8"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="http://localhost:1313/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" /><link rel="prev" href="http://localhost:1313/posts/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE/" /><link rel="next" href="http://localhost:1313/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/" />
-<link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/color.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
-        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
-        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="canonical" href="https://zhzwupup.github.io/blog/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" /><link rel="prev" href="https://zhzwupup.github.io/blog/posts/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE/" /><link rel="next" href="https://zhzwupup.github.io/blog/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/" />
+<link rel="stylesheet" href="/blog/css/main.css"><link rel="stylesheet" href="/blog/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/blog/css/color.css"><link rel="stylesheet" href="/blog/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/blog/lib/fontawesome-free/all.min.css">
+        <noscript><link rel="stylesheet" href="/blog/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/blog/lib/animate/animate.min.css">
+        <noscript><link rel="stylesheet" href="/blog/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
     {
         "@context": "http://schema.org",
         "@type": "BlogPosting",
@@ -32,9 +32,9 @@
         "inLanguage": "zh-CN",
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": "http:\/\/localhost:1313\/posts\/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B\/"
+            "@id": "https:\/\/zhzwupup.github.io\/blog\/posts\/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B\/"
         },"genre": "posts","keywords": "cpp","wordcount":  1715 ,
-        "url": "http:\/\/localhost:1313\/posts\/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B\/","datePublished": "2023-10-19T11:13:00+08:00","dateModified": "2024-01-24T23:48:57+08:00","publisher": {
+        "url": "https:\/\/zhzwupup.github.io\/blog\/posts\/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B\/","datePublished": "2023-10-19T11:13:00+08:00","dateModified": "2024-01-24T23:48:57+08:00","publisher": {
             "@type": "Organization",
             "name": "Zhao"},"author": {
                 "@type": "Person",
@@ -57,10 +57,10 @@
     <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
     <div class="header-wrapper">
         <div class="header-title">
-            <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+            <a href="/blog/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
         </div>
         <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/"> Home </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+            <div class="menu-inner"><a class="menu-item" href="/blog/"> Home </a><a class="menu-item" href="/blog/tags/"> Tags </a><a class="menu-item" href="/blog/categories/"> Categories </a><a class="menu-item" href="/blog/about/" title="About"> About </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
                     <i class="fas fa-adjust fa-fw"></i>
                 </a></div>
         </div>
@@ -69,13 +69,13 @@
     <div class="header-container">
         <div class="header-wrapper">
             <div class="header-title">
-                <a href="/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
+                <a href="/blog/" title="Zhao&#39;s blog">Zhao&#39;s blog</a>
             </div>
             <div class="menu-toggle" id="menu-toggle-mobile">
                 <span></span><span></span><span></span>
             </div>
         </div>
-        <div class="menu" id="menu-mobile"><a class="menu-item" href="/" title="">Home</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/blog/" title="">Home</a><a class="menu-item" href="/blog/tags/" title="">Tags</a><a class="menu-item" href="/blog/categories/" title="">Categories</a><a class="menu-item" href="/blog/about/" title="About">About</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
                 <i class="fas fa-adjust fa-fw"></i>
             </a></div>
     </div>
@@ -104,8 +104,8 @@
 </nav></div>
     </div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">C&#43;&#43;函数式编程</h1><div class="post-meta">
             <div class="post-meta-line">
-                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/" title="Author" rel=" author" class="author">Zhao</a>
-                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/"><i class="far fa-folder fa-fw"></i>编程语言</a></span></div>
+                <span class="post-author"><span class="author fas fa-user-circle fa-fw"></span><a href="/blog/" title="Author" rel=" author" class="author">Zhao</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-category">类别 <a href="/blog/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/"><i class="far fa-folder fa-fw"></i>编程语言</a></span></div>
             <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2023-10-19">2023-10-19</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime="2024-01-24">2024-01-24</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1715 字&nbsp;<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  kept="">
                 <div class="details-summary toc-title">
@@ -550,20 +550,20 @@
     </div>
 
     <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/cpp/">cpp</a></section>
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/blog/tags/cpp/">cpp</a></section>
         <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/blog/">主页</a></span>
         </section>
     </div>
 
-    <div class="post-nav"><a href="/posts/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE/" class="prev" rel="prev" title="交叉编译工具链"><i class="fas fa-angle-left fa-fw"></i>交叉编译工具链</a>
-            <a href="/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/" class="next" rel="next" title="CAN 总线的前世今生">CAN 总线的前世今生<i class="fas fa-angle-right fa-fw"></i></a></div>
+    <div class="post-nav"><a href="/blog/posts/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E9%93%BE/" class="prev" rel="prev" title="交叉编译工具链"><i class="fas fa-angle-left fa-fw"></i>交叉编译工具链</a>
+            <a href="/blog/posts/can-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/" class="next" rel="next" title="CAN 总线的前世今生">CAN 总线的前世今生<i class="fas fa-angle-right fa-fw"></i></a></div>
 </div>
 </article></div>
         </main><footer class="footer">
         <div class="footer-container"><div class="footer-line">
                     由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreferrer" title="Hugo 0.111.3">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreferrer" title="DoIt 0.4.0"><i class="far fa-edit fa-fw"></i> DoIt</a>
-                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/blog/" target="_blank" rel="noopener noreferrer">Zhao</a></span></div>
             <div class="footer-line"></div>
             <div class="footer-line">
             </div>
@@ -574,7 +574,7 @@
         </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
             <i class="fas fa-comment fa-fw"></i>
         </a>
-    </div><div class="assets"><link rel="stylesheet" href="/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/js/katex.min.js" defer></script><script type="text/javascript" src="/js/theme.min.js" defer></script></div>
+    </div><div class="assets"><link rel="stylesheet" href="/blog/lib/katex/katex.min.css"><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false}};</script><script type="text/javascript" src="/blog/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/blog/lib/katex/katex.min.js" defer></script><script type="text/javascript" src="/blog/lib/katex/auto-render.min.js" defer></script><script type="text/javascript" src="/blog/js/katex.min.js" defer></script><script type="text/javascript" src="/blog/js/theme.min.js" defer></script></div>
 </body>
 
 </html>

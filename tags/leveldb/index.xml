@@ -1,28 +1,28 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
         <title>LevelDB - 标签 - Zhao&#39;s blog</title>
-        <link>http://localhost:1313/tags/leveldb/</link>
+        <link>https://zhzwupup.github.io/blog/tags/leveldb/</link>
         <description>LevelDB - 标签 - Zhao&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 17 Jan 2024 00:00:00 &#43;0800</lastBuildDate><atom:link href="http://localhost:1313/tags/leveldb/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Wed, 17 Jan 2024 00:00:00 &#43;0800</lastBuildDate><atom:link href="https://zhzwupup.github.io/blog/tags/leveldb/" rel="self" type="application/rss+xml" /><item>
     <title>LevelDb 源码阅读 二：基本原理</title>
-    <link>http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%BA%8C-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</link>
+    <link>https://zhzwupup.github.io/blog/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%BA%8C-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</link>
     <pubDate>Wed, 17 Jan 2024 00:00:00 &#43;0800</pubDate><author>
         <name>Zhao</name>
-    </author><guid>http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%BA%8C-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</guid>
+    </author><guid>https://zhzwupup.github.io/blog/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%BA%8C-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</guid>
     <description><![CDATA[[LevelDB] 存储1：一目了然 —— 数据库包含哪些文件 - 知乎 LevelDB 源码分析「五、Sorted Table」 | SF-Zhou&rsquo;s Blog 每个 LevelDB 数据库由目录中的一组文件表示，文件类型有 L]]></description>
 </item><item>
     <title>LevelDB 源码阅读 零</title>
-    <link>http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6/</link>
+    <link>https://zhzwupup.github.io/blog/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6/</link>
     <pubDate>Wed, 17 Jan 2024 00:00:00 &#43;0800</pubDate><author>
         <name>Zhao</name>
-    </author><guid>http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6/</guid>
+    </author><guid>https://zhzwupup.github.io/blog/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%9B%B6/</guid>
     <description><![CDATA[google/leveldb: LevelDB is a fast key-value storage library written at Google that provides an ordered mapping from string keys to string values. 简介 Features Keys and values are arbitrary byte arrays. Data is stored sorted by key. Callers can provide a custom comparison function to override the sort order. The basic operations are Put(key,value), Get(key), Delete(key) . Multiple changes can be made in one atomic batch. Users can create]]></description>
 </item><item>
     <title>LevelDB 源码阅读 一：公开接口</title>
-    <link>http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3/</link>
+    <link>https://zhzwupup.github.io/blog/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3/</link>
     <pubDate>Wed, 17 Jan 2024 00:00:00 &#43;0800</pubDate><author>
         <name>Zhao</name>
-    </author><guid>http://localhost:1313/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3/</guid>
+    </author><guid>https://zhzwupup.github.io/blog/posts/leveldb-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E4%B8%80-%E5%85%AC%E5%BC%80%E6%8E%A5%E5%8F%A3/</guid>
     <description><![CDATA[LevelDB 作为库，对外公开的接口是 include/leveldb/*.h 。 1 2 cd $leveldb ls include/leveldb 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 cache.h c.h comparator.h db.h dumpfile.h env.h export.h filter_policy.h iterator.h options.h slice.h status.h table_builder.h table.h write_batch.h db.h，操作 DB 的主要接口 option]]></description>
 </item></channel>
 </rss>

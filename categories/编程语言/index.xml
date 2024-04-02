@@ -1,28 +1,28 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
         <title>编程语言 - 分类 - Zhao&#39;s blog</title>
-        <link>http://localhost:1313/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/</link>
+        <link>https://zhzwupup.github.io/blog/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/</link>
         <description>编程语言 - 分类 - Zhao&#39;s blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 19 Oct 2023 11:13:00 &#43;0800</lastBuildDate><atom:link href="http://localhost:1313/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 19 Oct 2023 11:13:00 &#43;0800</lastBuildDate><atom:link href="https://zhzwupup.github.io/blog/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/" rel="self" type="application/rss+xml" /><item>
     <title>C&#43;&#43;函数式编程</title>
-    <link>http://localhost:1313/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/</link>
+    <link>https://zhzwupup.github.io/blog/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/</link>
     <pubDate>Thu, 19 Oct 2023 11:13:00 &#43;0800</pubDate><author>
         <name>Zhao</name>
-    </author><guid>http://localhost:1313/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/</guid>
+    </author><guid>https://zhzwupup.github.io/blog/posts/c-plus-plus-%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/</guid>
     <description><![CDATA[chap 2 使用 STL 中的高阶函数 示例命令式求平均值 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 #include &lt;iostream&gt; #include &lt;vector&gt; double average_score(const std::vector&lt;int&gt;&amp; scores) { int sum = 0; for (int score : scores) { sum += score; } return sum / (double)scores.size(); } int main() { std::vector&lt;int&gt; iv{1, 2,]]></description>
 </item><item>
     <title>Python yield</title>
-    <link>http://localhost:1313/posts/python-yield/</link>
+    <link>https://zhzwupup.github.io/blog/posts/python-yield/</link>
     <pubDate>Thu, 19 Oct 2023 10:28:00 &#43;0800</pubDate><author>
         <name>Zhao</name>
-    </author><guid>http://localhost:1313/posts/python-yield/</guid>
+    </author><guid>https://zhzwupup.github.io/blog/posts/python-yield/</guid>
     <description><![CDATA[Yield in Python Tutorial: Generator &amp; Yield vs Return Example 什么是 Python yieldPython 中 yield 关键字的作用类似于 return,不同之处在于，它不是返回一个值，而是向调用者返回一个生成器对象。当调用函数]]></description>
 </item><item>
     <title>Python 命令行参数解析</title>
-    <link>http://localhost:1313/posts/python-%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90/</link>
+    <link>https://zhzwupup.github.io/blog/posts/python-%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90/</link>
     <pubDate>Thu, 19 Oct 2023 10:28:00 &#43;0800</pubDate><author>
         <name>Zhao</name>
-    </author><guid>http://localhost:1313/posts/python-%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90/</guid>
+    </author><guid>https://zhzwupup.github.io/blog/posts/python-%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90/</guid>
     <description><![CDATA[基本使用 1 2 3 4 5 6 import sys sys.argv = [&#39;ooo.py&#39;, &#39;--help&#39;] import argparse parser = argparse.ArgumentParser() print(parser.parse_args()) 1 2 3 4 usage: ooo.py [-h] options: -h, --help show this help message and exit 直接执行脚本，标准输出没有内容。 --help 在标准输出上显示提示信息 位置参]]></description>
 </item></channel>
 </rss>
